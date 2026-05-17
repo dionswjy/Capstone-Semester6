@@ -7,11 +7,25 @@ class LoginController extends GetxController {
   final passwordController = TextEditingController();
   final isPasswordVisible = false.obs;
 
-  void togglePasswordVisibility() => isPasswordVisible.value = !isPasswordVisible.value;
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
+  }
 
   void login() {
-    // Implement actual login logic here
-    Get.offAllNamed(Routes.DASHBOARD);
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email == 'petugas@tirtadesa.com' && password == '123456') {
+      Get.offAllNamed(Routes.PETUGAS_DASHBOARD);
+    } else if (email == 'pelanggan@tirtadesa.com' && password == '123456') {
+      Get.offAllNamed(Routes.DASHBOARD);
+    } else {
+      Get.snackbar(
+        'Login Gagal',
+        'Email atau password salah',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
   @override
