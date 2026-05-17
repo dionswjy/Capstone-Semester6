@@ -1,17 +1,48 @@
-# tirta_desa
+# TirtaDesa
 
-A new Flutter project.
+TirtaDesa adalah aplikasi mobile berbasis Flutter yang digunakan untuk membantu proses pencatatan dan monitoring meter air serta layanan pelanggan pada PAMSIMAS Desa.
 
-## Getting Started
+Aplikasi ini dibuat untuk mempermudah petugas dalam mencatat meter air pelanggan, mengelola data pelanggan, memantau tagihan, serta menangani pengaduan masyarakat secara digital.
 
-This project is a starting point for a Flutter application.
+## Deskripsi Project
 
-A few resources to get you started if this is your first Flutter project:
+Project ini dikembangkan sebagai aplikasi mobile dengan fokus pada kebutuhan operasional PAMSIMAS desa. Sistem ini memiliki beberapa fitur utama seperti:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Login pengguna
+- Dashboard informasi
+- Manajemen data pelanggan
+- Pencatatan meter air
+- Riwayat pembayaran/tagihan
+- Pengaduan pelanggan
+- Profil pengguna/petugas
+- Monitoring data penggunaan air
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Teknologi yang Digunakan
+
+- Flutter
+- Dart
+- GetX Pattern
+- Firebase / API Backend
+- Git & GitHub
+- Figma / Stitch untuk desain UI
+
+## Arsitektur Aplikasi
+
+Project ini menggunakan pola arsitektur GetX agar struktur kode lebih rapi, modular, dan mudah dikembangkan.
+
+Struktur utama aplikasi:
+
+```bash
+lib/
+├── app/
+│   ├── modules/
+│   │   ├── login/
+│   │   ├── dashboard/
+│   │   ├── pelanggan/
+│   │   ├── petugas_meter/
+│   │   ├── pengaduan/
+│   │   └── profile/
+│   ├── routes/
+│   ├── data/
+│   └── widgets/
+└── main.dart
