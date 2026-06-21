@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tirta_desa/core/values/colors.dart';
-import '../controllers/register_controller.dart';
 
-class RegisterView extends GetView<RegisterController> {
-  const RegisterView({super.key});
+import '../controllers/forgot_password_controller.dart';
+
+class ForgotPasswordView extends GetView<ForgotPasswordController> {
+  const ForgotPasswordView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,59 +15,64 @@ class RegisterView extends GetView<RegisterController> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(LucideIcons.droplets, color: AppColors.primaryContainer),
-            const SizedBox(width: 8),
-            Text(
-              "TirtaDesa",
-              style: Get.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryContainer,
-              ),
-            ),
-          ],
+        leading: IconButton(
+          onPressed: () => Get.back(),
+          icon: const Icon(LucideIcons.arrowLeft),
+        ),
+        title: const Text(
+          "Lupa Sandi",
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Daftar Akun Baru",
-              style: Get.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Bergabunglah untuk mengelola penggunaan air Anda dengan lebih transparan.",
-              style: TextStyle(color: AppColors.onSurfaceVariant),
-            ),
+            _buildHeader(),
             const SizedBox(height: 32),
             _buildForm(),
-            const SizedBox(height: 24),
-            Center(
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  const Text("Sudah punya akun?"),
-                  TextButton(
-                    onPressed: () => Get.back(),
-                    child: const Text(
-                      "Masuk",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              color: AppColors.primaryContainer.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              LucideIcons.keyRound,
+              size: 42,
+              color: AppColors.primaryContainer,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          "Reset Password",
+          style: Get.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          "Masukkan email akun Anda, lalu sistem akan mengirim kode OTP untuk mengganti password.",
+          style: TextStyle(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 
@@ -88,20 +94,19 @@ class RegisterView extends GetView<RegisterController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildField(
-            "Nama Lengkap",
-            controller.nameController,
-            LucideIcons.user,
-            hint: "Masukkan nama lengkap Anda",
-          ),
-          _buildField(
-            "Alamat Email",
-            controller.emailController,
-            LucideIcons.mail,
+            label: "Alamat Email",
+            controller: controller.emailController,
+            icon: LucideIcons.mail,
             hint: "contoh@email.com",
+            keyboardType: TextInputType.emailAddress,
           ),
+
           const Text(
             "Kode OTP",
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -109,9 +114,10 @@ class RegisterView extends GetView<RegisterController> {
               Expanded(
                 child: TextField(
                   controller: controller.otpController,
+                  keyboardType: TextInputType.number,
                   decoration: _inputDecoration(
                     LucideIcons.shieldCheck,
-                    "Masukkan kode OTP",
+                    "Masukkan OTP",
                   ),
                 ),
               ),
@@ -140,40 +146,38 @@ class RegisterView extends GetView<RegisterController> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildField(
-            "Nomor Telepon",
-            controller.phoneController,
-            LucideIcons.phone,
-            hint: "0812xxxx",
-          ),
+
           Obx(
             () => _buildField(
-              "Kata Sandi",
-              controller.passwordController,
-              LucideIcons.lock,
-              hint: "••••••••",
+              label: "Password Baru",
+              controller: controller.newPasswordController,
+              icon: LucideIcons.lock,
+              hint: "Masukkan password baru",
               obscure: !controller.isPasswordVisible.value,
               onToggle: controller.togglePassword,
             ),
           ),
+
           Obx(
             () => _buildField(
-              "Konfirmasi",
-              controller.confirmPasswordController,
-              LucideIcons.refreshCcw,
-              hint: "••••••••",
+              label: "Konfirmasi Password",
+              controller: controller.confirmPasswordController,
+              icon: LucideIcons.refreshCcw,
+              hint: "Ulangi password baru",
               obscure: !controller.isConfirmVisible.value,
               onToggle: controller.toggleConfirm,
             ),
           ),
+
           const SizedBox(height: 24),
-          Obx(() {
-            return SizedBox(
+
+          Obx(
+            () => SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: controller.isLoading.value
                     ? null
-                    : controller.register,
+                    : controller.resetPassword,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryContainer,
                   foregroundColor: Colors.white,
@@ -184,8 +188,8 @@ class RegisterView extends GetView<RegisterController> {
                 ),
                 child: controller.isLoading.value
                     ? const SizedBox(
-                        height: 22,
                         width: 22,
+                        height: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
@@ -195,42 +199,45 @@ class RegisterView extends GetView<RegisterController> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Daftar Sekarang",
+                            "Ubah Password",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           SizedBox(width: 8),
-                          Icon(LucideIcons.arrowRight, size: 18),
+                          Icon(LucideIcons.checkCircle, size: 18),
                         ],
                       ),
               ),
-            );
-          }),
-          const SizedBox(height: 24),
-          const _SocialRegisterSection(),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildField(
-    String label,
-    TextEditingController ctrl,
-    IconData icon, {
+  Widget _buildField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
     String? hint,
     bool obscure = false,
     VoidCallback? onToggle,
+    TextInputType? keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
-          controller: ctrl,
+          controller: controller,
           obscureText: obscure,
+          keyboardType: keyboardType,
           decoration: _inputDecoration(icon, hint ?? "").copyWith(
             suffixIcon: onToggle != null
                 ? IconButton(
@@ -258,53 +265,6 @@ class RegisterView extends GetView<RegisterController> {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
-    );
-  }
-}
-
-class _SocialRegisterSection extends StatelessWidget {
-  const _SocialRegisterSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Row(
-          children: [
-            Expanded(child: Divider()),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "Atau daftar dengan",
-                style: TextStyle(fontSize: 12, color: AppColors.outline),
-              ),
-            ),
-            Expanded(child: Divider()),
-          ],
-        ),
-        const SizedBox(height: 16),
-        OutlinedButton(
-          onPressed: () {},
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 54),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            side: BorderSide(color: AppColors.outline.withOpacity(0.2)),
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(LucideIcons.chrome, size: 20),
-              SizedBox(width: 12),
-              Text(
-                "Daftar dengan Google",
-                style: TextStyle(color: AppColors.onSurface),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

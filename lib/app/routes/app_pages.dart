@@ -4,6 +4,8 @@ import '../modules/calculator/bindings/calculator_binding.dart';
 import '../modules/calculator/views/calculator_view.dart';
 import '../modules/dashboard/bindings/dashboard_binding.dart';
 import '../modules/dashboard/views/dashboard_view.dart';
+import '../modules/forgot_password/bindings/forgot_password_binding.dart';
+import '../modules/forgot_password/views/forgot_password_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/new_installation/bindings/new_installation_binding.dart';
@@ -132,6 +134,11 @@ class AppPages {
       name: _Paths.PETUGAS_PROFILE,
       page: () => const PetugasProfileView(),
       binding: PetugasProfileBinding(),
+    ),
+    GetPage(
+      name: _Paths.FORGOT_PASSWORD,
+      page: () => const ForgotPasswordView(),
+      binding: ForgotPasswordBinding(),
     ),
   ];
 }

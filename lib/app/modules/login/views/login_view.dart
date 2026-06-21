@@ -109,7 +109,7 @@ class LoginView extends GetView<LoginController> {
             children: [
               const Text("Kata Sandi", style: TextStyle(fontWeight: FontWeight.w600)),
               TextButton(
-                onPressed: () {},
+                onPressed: () => Get.toNamed(Routes.FORGOT_PASSWORD),
                 child: const Text("Lupa Sandi?", style: TextStyle(fontSize: 12)),
               ),
             ],

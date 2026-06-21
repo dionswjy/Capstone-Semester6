@@ -22,6 +22,7 @@ abstract class Routes {
   static const PETUGAS_INPUT_METER = _Paths.PETUGAS_INPUT_METER;
   static const PETUGAS_PENGADUAN = _Paths.PETUGAS_PENGADUAN;
   static const PETUGAS_PROFILE = _Paths.PETUGAS_PROFILE;
+  static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
 }
 
 abstract class _Paths {
@@ -45,4 +46,5 @@ abstract class _Paths {
   static const PETUGAS_INPUT_METER = '/petugas-input-meter';
   static const PETUGAS_PENGADUAN = '/petugas-pengaduan';
   static const PETUGAS_PROFILE = '/petugas-profile';
+  static const FORGOT_PASSWORD = '/forgot-password';
 }

@@ -3,19 +3,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:tirta_desa/app/routes/app_pages.dart';
 
-class RegisterController extends GetxController {
-  final nameController = TextEditingController();
+class ForgotPasswordController extends GetxController {
   final emailController = TextEditingController();
   final otpController = TextEditingController();
-  final phoneController = TextEditingController();
-  final passwordController = TextEditingController();
+  final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
+  final isSendingOtp = false.obs;
+  final isLoading = false.obs;
   final isPasswordVisible = false.obs;
   final isConfirmVisible = false.obs;
-  final isLoading = false.obs;
-  final isSendingOtp = false.obs;
 
   final String baseUrl = "http://127.0.0.1:8000";
 
@@ -29,17 +28,19 @@ class RegisterController extends GetxController {
 
   Future<void> sendOtp() async {
     if (emailController.text.trim().isEmpty) {
-      Get.snackbar("Gagal", "Email wajib diisi terlebih dahulu");
+      Get.snackbar(
+        "Gagal",
+        "Email wajib diisi terlebih dahulu",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
     isSendingOtp.value = true;
 
     try {
-      final url = Uri.parse("$baseUrl/send-otp");
-
       final response = await http.post(
-        url,
+        Uri.parse("$baseUrl/forgot-password/send-otp"),
         headers: {
           "Content-Type": "application/json",
         },
@@ -54,77 +55,85 @@ class RegisterController extends GetxController {
         Get.snackbar(
           "Berhasil",
           data["message"] ?? "OTP berhasil dikirim ke email",
+          snackPosition: SnackPosition.BOTTOM,
         );
       } else {
         Get.snackbar(
           "Gagal",
           data["detail"]?.toString() ?? "Gagal mengirim OTP",
+          snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       Get.snackbar(
         "Error",
-        "Tidak bisa terhubung ke server. Pastikan FastAPI sudah jalan.",
+        "Tidak bisa terhubung ke server",
+        snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isSendingOtp.value = false;
     }
   }
 
-  Future<void> register() async {
-    if (nameController.text.trim().isEmpty ||
-        emailController.text.trim().isEmpty ||
+  Future<void> resetPassword() async {
+    if (emailController.text.trim().isEmpty ||
         otpController.text.trim().isEmpty ||
-        phoneController.text.trim().isEmpty ||
-        passwordController.text.isEmpty ||
+        newPasswordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
-      Get.snackbar("Gagal", "Semua field wajib diisi");
+      Get.snackbar(
+        "Gagal",
+        "Semua field wajib diisi",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
-    if (passwordController.text != confirmPasswordController.text) {
-      Get.snackbar("Gagal", "Password dan konfirmasi tidak sama");
+    if (newPasswordController.text != confirmPasswordController.text) {
+      Get.snackbar(
+        "Gagal",
+        "Password baru dan konfirmasi tidak sama",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
     isLoading.value = true;
 
     try {
-      final url = Uri.parse("$baseUrl/register");
-
       final response = await http.post(
-        url,
+        Uri.parse("$baseUrl/forgot-password/reset"),
         headers: {
           "Content-Type": "application/json",
         },
         body: jsonEncode({
-          "name": nameController.text.trim(),
           "email": emailController.text.trim(),
-          "phone": phoneController.text.trim(),
-          "password": passwordController.text,
           "otp": otpController.text.trim(),
+          "new_password": newPasswordController.text,
         }),
       );
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200) {
         Get.snackbar(
           "Berhasil",
-          data["message"] ?? "Akun berhasil dibuat",
+          data["message"] ?? "Password berhasil diubah",
+          snackPosition: SnackPosition.BOTTOM,
         );
 
-        Get.offAllNamed('/login');
+        Get.offAllNamed(Routes.LOGIN);
       } else {
         Get.snackbar(
           "Gagal",
-          data["detail"]?.toString() ?? "Register gagal",
+          data["detail"]?.toString() ?? "Reset password gagal",
+          snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       Get.snackbar(
         "Error",
-        "Tidak bisa terhubung ke server. Pastikan FastAPI sudah jalan.",
+        "Tidak bisa terhubung ke server",
+        snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isLoading.value = false;
@@ -133,12 +142,7 @@ class RegisterController extends GetxController {
 
   @override
   void onClose() {
-    nameController.dispose();
-    emailController.dispose();
-    otpController.dispose();
-    phoneController.dispose();
-    passwordController.dispose();
-    confirmPasswordController.dispose();
+    // Jangan dispose dulu agar tidak muncul error TextEditingController disposed.
     super.onClose();
   }
 }
