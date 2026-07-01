@@ -94,6 +94,12 @@ class RegisterView extends GetView<RegisterController> {
             hint: "Masukkan nama lengkap Anda",
           ),
           _buildField(
+            "NIK",
+            controller.nikController,
+            LucideIcons.creditCard,
+            hint: "16 Digit Nomor NIK",
+          ),
+          _buildField(
             "Alamat Email",
             controller.emailController,
             LucideIcons.mail,
@@ -146,6 +152,34 @@ class RegisterView extends GetView<RegisterController> {
             LucideIcons.phone,
             hint: "0812xxxx",
           ),
+          _buildField(
+            "Alamat Lengkap",
+            controller.alamatController,
+            LucideIcons.mapPin,
+            hint: "Masukkan alamat lengkap Anda",
+          ),
+          const Text(
+            "Kategori Pelanggan",
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          Obx(
+            () => DropdownButtonFormField<String>(
+              value: controller.selectedKategori.value,
+              items: controller.listKategori.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: controller.changeKategori,
+              decoration: _inputDecoration(
+                LucideIcons.tag,
+                "Pilih Kategori",
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Obx(
             () => _buildField(
               "Kata Sandi",

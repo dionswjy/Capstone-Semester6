@@ -46,12 +46,14 @@ class NewReportView extends GetView<NewReportController> {
             const SizedBox(height: 16),
             _buildUploadBox(),
             const SizedBox(height: 40),
-            SizedBox(
+            Obx(() => SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: controller.submit,
-                icon: const Icon(LucideIcons.send, size: 18),
-                label: const Text("Kirim Laporan"),
+                onPressed: controller.isLoading.value ? null : controller.submit,
+                icon: controller.isLoading.value
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(LucideIcons.send, size: 18),
+                label: Text(controller.isLoading.value ? "Mengirim..." : "Kirim Laporan"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryContainer,
                   foregroundColor: Colors.white,
@@ -59,7 +61,7 @@ class NewReportView extends GetView<NewReportController> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-            ),
+            )),
           ],
         ),
       ),

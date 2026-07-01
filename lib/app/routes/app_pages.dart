@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../modules/activity_log/bindings/activity_log_binding.dart';
+import '../modules/activity_log/views/activity_log_view.dart';
 import '../modules/calculator/bindings/calculator_binding.dart';
 import '../modules/calculator/views/calculator_view.dart';
 import '../modules/dashboard/bindings/dashboard_binding.dart';
@@ -18,6 +20,8 @@ import '../modules/payment_detail/bindings/payment_detail_binding.dart';
 import '../modules/payment_detail/views/payment_detail_view.dart';
 import '../modules/payment_history/bindings/payment_history_binding.dart';
 import '../modules/payment_history/views/payment_history_view.dart';
+import '../modules/petugas_activity_log/bindings/petugas_activity_log_binding.dart';
+import '../modules/petugas_activity_log/views/petugas_activity_log_view.dart';
 import '../modules/petugas_dashboard/bindings/petugas_dashboard_binding.dart';
 import '../modules/petugas_dashboard/views/petugas_dashboard_view.dart';
 import '../modules/petugas_input_meter/bindings/petugas_input_meter_binding.dart';
@@ -139,6 +143,16 @@ class AppPages {
       name: _Paths.FORGOT_PASSWORD,
       page: () => const ForgotPasswordView(),
       binding: ForgotPasswordBinding(),
+    ),
+    GetPage(
+      name: _Paths.ACTIVITY_LOG,
+      page: () => const ActivityLogView(),
+      binding: ActivityLogBinding(),
+    ),
+    GetPage(
+      name: _Paths.PETUGAS_ACTIVITY_LOG,
+      page: () => const PetugasActivityLogView(),
+      binding: PetugasActivityLogBinding(),
     ),
   ];
 }

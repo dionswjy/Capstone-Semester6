@@ -4,15 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:tirta_desa/app/routes/app_pages.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:tirta_desa/core/values/api.dart';
 
 class LoginController extends GetxController {
+  final box = GetStorage();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   final isPasswordVisible = false.obs;
   final isLoading = false.obs;
 
-  final String baseUrl = "http://127.0.0.1:8000";
+  final String baseUrl = Api.baseUrl;
 
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
@@ -43,26 +46,33 @@ class LoginController extends GetxController {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final role = data["user"]["role"];
 
-        Get.snackbar(
-          "Berhasil",
-          data["message"] ?? "Login berhasil",
-          snackPosition: SnackPosition.BOTTOM,
-        );
+    final user = data["user"];
 
-        if (role == "petugas") {
-          Get.offAllNamed(Routes.PETUGAS_DASHBOARD);
-        } else if (role == "pelanggan") {
-          Get.offAllNamed(Routes.DASHBOARD);
-        } else {
-          Get.snackbar(
-            "Gagal",
-            "Role pengguna tidak dikenali",
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        }
-      } else {
+    box.write("token", data["access_token"]);
+    box.write("id", user["id"]);
+    box.write("name", user["name"]);
+    box.write("email", user["email"]);
+    box.write("phone", user["phone"]);
+    box.write("role", user["role"]);
+
+    final role = user["role"];
+
+    // Ambil pelanggan_id di background (tidak block login)
+    _fetchAndSavePelangganId(user["id"], data["access_token"]);
+
+    Get.snackbar(
+      "Berhasil",
+      data["message"] ?? "Login berhasil",
+      snackPosition: SnackPosition.BOTTOM,
+    );
+
+    if (role == "petugas") {
+      Get.offAllNamed(Routes.PETUGAS_DASHBOARD);
+    } else {
+      Get.offAllNamed(Routes.DASHBOARD);
+    }
+} else {
         Get.snackbar(
           "Login Gagal",
           data["detail"]?.toString() ?? "Email atau password salah",
@@ -80,9 +90,33 @@ class LoginController extends GetxController {
     }
   }
 
+  /// Cari pelanggan_id berdasarkan user_id lalu simpan ke storage
+  Future<void> _fetchAndSavePelangganId(int userId, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/pelanggan"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+      if (response.statusCode == 200) {
+        final List list = jsonDecode(response.body);
+        for (final item in list) {
+          if (item["user_id"] == userId) {
+            box.write("pelanggan_id", item["id"]);
+            break;
+          }
+        }
+      }
+    } catch (_) {
+      // silent fail — akan coba ulang saat kirim laporan
+    }
+  }
+
   @override
   void onClose() {
     // Jangan dispose dulu supaya tidak error TextEditingController saat halaman dibuka ulang.
     super.onClose();
   }
-}
+}

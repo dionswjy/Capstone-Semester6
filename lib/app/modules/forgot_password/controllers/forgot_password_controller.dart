@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:tirta_desa/app/routes/app_pages.dart';
+import 'package:tirta_desa/core/values/api.dart';
 
 class ForgotPasswordController extends GetxController {
   final emailController = TextEditingController();
@@ -16,7 +17,7 @@ class ForgotPasswordController extends GetxController {
   final isPasswordVisible = false.obs;
   final isConfirmVisible = false.obs;
 
-  final String baseUrl = "http://127.0.0.1:8000";
+  final String baseUrl = Api.baseUrl;
 
   void togglePassword() {
     isPasswordVisible.value = !isPasswordVisible.value;

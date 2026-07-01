@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:tirta_desa/core/values/api.dart';
 
 class RegisterController extends GetxController {
   final nameController = TextEditingController();
@@ -11,13 +12,18 @@ class RegisterController extends GetxController {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final nikController = TextEditingController();
+  final alamatController = TextEditingController();
+
+  final selectedKategori = "Rumah Tangga".obs;
+  final listKategori = ["Rumah Tangga", "Sosial", "Niaga", "Industri"];
 
   final isPasswordVisible = false.obs;
   final isConfirmVisible = false.obs;
   final isLoading = false.obs;
   final isSendingOtp = false.obs;
 
-  final String baseUrl = "http://127.0.0.1:8000";
+  final String baseUrl = Api.baseUrl;
 
   void togglePassword() {
     isPasswordVisible.value = !isPasswordVisible.value;
@@ -25,6 +31,12 @@ class RegisterController extends GetxController {
 
   void toggleConfirm() {
     isConfirmVisible.value = !isConfirmVisible.value;
+  }
+
+  void changeKategori(String? val) {
+    if (val != null) {
+      selectedKategori.value = val;
+    }
   }
 
   Future<void> sendOtp() async {
@@ -77,7 +89,9 @@ class RegisterController extends GetxController {
         otpController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty ||
         passwordController.text.isEmpty ||
-        confirmPasswordController.text.isEmpty) {
+        confirmPasswordController.text.isEmpty ||
+        nikController.text.trim().isEmpty ||
+        alamatController.text.trim().isEmpty) {
       Get.snackbar("Gagal", "Semua field wajib diisi");
       return;
     }
@@ -103,6 +117,9 @@ class RegisterController extends GetxController {
           "phone": phoneController.text.trim(),
           "password": passwordController.text,
           "otp": otpController.text.trim(),
+          "nik": nikController.text.trim(),
+          "alamat": alamatController.text.trim(),
+          "kategori": selectedKategori.value,
         }),
       );
 
@@ -139,6 +156,8 @@ class RegisterController extends GetxController {
     phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
+    nikController.dispose();
+    alamatController.dispose();
     super.onClose();
   }
 }

@@ -46,11 +46,9 @@ class ProfileView extends GetView<ProfileController> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 4),
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
-                image: const DecorationImage(
-                  image: NetworkImage("https://lh3.googleusercontent.com/aida-public/AB6AXuC-jGrDmQhewq-IbWLb5qQqbnDJa2XEgoBMB-VEGTQUyqjZN_qHFpIf_rqyWejALzi4aaVxxYQYMdOQbJ-lMqXA2E-r7vd_l6Cn0yUfDNhGsGjA92eKaVS_tKutvYaXXmII8wF29B6VvluLeKjMqbrzMNiiN9b9twtLxbrfb6SljCSiMp0Q6A7xRhuiHG-2UmhVdfonnt_WyNaxIqMQAnQAa3r913HCoUGDB1_tALRtprkUDn6g5zg87Xzd7_sgx43X77q-AB86nhk"),
-                  fit: BoxFit.cover,
-                ),
+                color: AppColors.primaryFixed,
               ),
+              child: const Icon(LucideIcons.user, size: 48, color: AppColors.primaryContainer),
             ),
             Positioned(
               bottom: 0,
@@ -64,13 +62,13 @@ class ProfileView extends GetView<ProfileController> {
           ],
         ),
         const SizedBox(height: 16),
-        const Text("Budi Santoso", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        Obx(() => Text(controller.userName.value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20))),
         const SizedBox(height: 4),
-        Container(
+        Obx(() => Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20)),
-          child: const Text("ID: TD-2024-001", style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
-        ),
+          child: Text("ID: ${controller.userId.value}", style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+        )),
       ],
     );
   }
@@ -85,16 +83,119 @@ class ProfileView extends GetView<ProfileController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text("INFORMASI AKUN", style: TextStyle(color: AppColors.primaryContainer, fontSize: 10, fontWeight: FontWeight.bold)),
-              TextButton(onPressed: () {}, child: const Text("Ubah", style: TextStyle(fontSize: 12))),
+              TextButton(
+                onPressed: () => _showEditProfileSheet(Get.context!),
+                child: const Text("Ubah", style: TextStyle(fontSize: 12)),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          _infoRow(LucideIcons.mail, "Email", "budi.santoso@desa.id"),
+          Obx(() => _infoRow(LucideIcons.mail, "Email", controller.userEmail.value)),
           const SizedBox(height: 16),
-          _infoRow(LucideIcons.phone, "No. Telepon", "0812 3456 7890"),
-          const SizedBox(height: 16),
-          _infoRow(LucideIcons.mapPin, "Alamat", "Jl. Melati No. 12, Desa Sumber Air"),
+          Obx(() => _infoRow(LucideIcons.phone, "No. Telepon", controller.userPhone.value)),
         ],
+      ),
+    );
+  }
+
+  void _showEditProfileSheet(BuildContext context) {
+    final nameCtrl = TextEditingController(text: controller.userName.value);
+    final phoneCtrl = TextEditingController(text: controller.userPhone.value);
+    final passwordCtrl = TextEditingController();
+    final isPasswordVisible = false.obs;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text("Edit Profil", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: "Nama Lengkap",
+                  prefixIcon: const Icon(LucideIcons.user),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: "No. Telepon",
+                  prefixIcon: const Icon(LucideIcons.phone),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Obx(() => TextField(
+                controller: passwordCtrl,
+                obscureText: !isPasswordVisible.value,
+                decoration: InputDecoration(
+                  labelText: "Password Baru (kosongkan jika tidak ingin ganti)",
+                  prefixIcon: const Icon(LucideIcons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(isPasswordVisible.value ? LucideIcons.eyeOff : LucideIcons.eye),
+                    onPressed: () => isPasswordVisible.value = !isPasswordVisible.value,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              )),
+              const SizedBox(height: 24),
+              Obx(() => SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : () async {
+                          final success = await controller.updateProfile(
+                            nameCtrl.text,
+                            phoneCtrl.text,
+                            password: passwordCtrl.text.isEmpty ? null : passwordCtrl.text,
+                          );
+                          if (success) Get.back();
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryContainer,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: controller.isLoading.value
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text("Simpan Perubahan", style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              )),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -153,6 +254,14 @@ class ProfileView extends GetView<ProfileController> {
             title: const Text("Riwayat Pembayaran", style: TextStyle(fontSize: 14)),
             trailing: const Icon(LucideIcons.chevronRight, size: 18),
             onTap: () => Get.toNamed(Routes.PAYMENT_HISTORY),
+          ),
+          const Divider(),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(LucideIcons.clipboardList, color: AppColors.onSurfaceVariant),
+            title: const Text("Log Aktivitas", style: TextStyle(fontSize: 14)),
+            trailing: const Icon(LucideIcons.chevronRight, size: 18),
+            onTap: () => Get.toNamed(Routes.ACTIVITY_LOG),
           ),
         ],
       ),

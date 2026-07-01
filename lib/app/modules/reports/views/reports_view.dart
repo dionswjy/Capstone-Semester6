@@ -3,8 +3,9 @@ import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tirta_desa/core/values/colors.dart';
 import 'package:tirta_desa/app/routes/app_pages.dart';
+import '../controllers/reports_controller.dart';
 
-class ReportsView extends StatelessWidget {
+class ReportsView extends GetView<ReportsController> {
   const ReportsView({super.key});
 
   @override
@@ -16,49 +17,103 @@ class ReportsView extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            _buildHeroCTA(),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Riwayat Laporan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(LucideIcons.filter, size: 16),
-                  label: const Text("Filter"),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildReportCard(
-              id: "#TK-88291",
-              title: "Pipa Bocor",
-              status: "Diproses",
-              statusColor: Colors.orange,
-              desc: "Ada kebocoran pipa di depan rumah nomor 42, air meluap hingga ke jalan raya.",
-              date: "24 Okt 2023",
-            ),
-            _buildReportCard(
-              id: "#TK-88305",
-              title: "Air Keruh",
-              status: "Pending",
-              statusColor: Colors.red,
-              desc: "Air yang keluar dari keran berwarna kecoklatan dan berbau tanah.",
-              date: "Sekarang",
-            ),
-            _buildReportCard(
-              id: "#TK-87912",
-              title: "Meteran Rusak",
-              status: "Selesai",
-              statusColor: Colors.green,
-              desc: "Angka di meteran tidak bergerak meskipun air digunakan secara normal.",
-              date: "20 Okt 2023",
-            ),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () => controller.fetchReports(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              _buildHeroCTA(),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Riwayat Laporan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  TextButton.icon(
+                    onPressed: () => controller.fetchReports(),
+                    icon: const Icon(LucideIcons.refreshCw, size: 16),
+                    label: const Text("Refresh"),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Obx(() {
+                if (controller.isLoading.value && controller.reports.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                if (controller.reports.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(LucideIcons.folderOpen, size: 48, color: AppColors.outline.withOpacity(0.5)),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Belum ada riwayat laporan",
+                            style: TextStyle(color: AppColors.outline, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: controller.reports.length,
+                  itemBuilder: (context, index) {
+                    final report = controller.reports[index];
+                    final String idStr = "#TK-${report['id']}";
+                    final String title = report['judul'] ?? "Laporan";
+                    final String desc = report['deskripsi'] ?? "";
+                    
+                    // Parse status & color
+                    final String statusRaw = (report['status'] ?? "pending").toString().toLowerCase();
+                    String statusText = "Pending";
+                    Color statusColor = Colors.red;
+
+                    if (statusRaw == "selesai" || statusRaw == "resolved" || statusRaw == "sukses") {
+                      statusText = "Selesai";
+                      statusColor = Colors.green;
+                    } else if (statusRaw == "proses" || statusRaw == "diproses" || statusRaw == "progress") {
+                      statusText = "Diproses";
+                      statusColor = Colors.orange;
+                    }
+
+                    // Parse date
+                    String dateStr = "Baru Saja";
+                    if (report['created_at'] != null) {
+                      try {
+                        final parsedDate = DateTime.parse(report['created_at'].toString());
+                        dateStr = "${parsedDate.day}/${parsedDate.month}/${parsedDate.year}";
+                      } catch (_) {
+                        dateStr = report['created_at'].toString().split("T")[0];
+                      }
+                    }
+
+                    return _buildReportCard(
+                      id: idStr,
+                      title: title,
+                      status: statusText,
+                      statusColor: statusColor,
+                      desc: desc,
+                      date: dateStr,
+                    );
+                  },
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );

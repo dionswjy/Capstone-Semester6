@@ -42,17 +42,26 @@ class NewInstallationView extends GetView<NewInstallationController> {
             const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: controller.submit,
-                icon: const Icon(LucideIcons.send, size: 18),
-                label: const Text("Ajukan Pemasangan"),
+              child: Obx(() => ElevatedButton.icon(
+                onPressed: controller.isLoading.value ? null : controller.submit,
+                icon: controller.isLoading.value
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(LucideIcons.send, size: 18),
+                label: Text(controller.isLoading.value ? "Mengirim..." : "Ajukan Pemasangan"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryContainer,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-              ),
+              )),
             ),
           ],
         ),

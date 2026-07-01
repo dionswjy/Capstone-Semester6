@@ -191,6 +191,74 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
                 ],
               ),
 
+              const SizedBox(height: 24),
+
+              // Log Aktivitas Card
+              GestureDetector(
+                onTap: () => Get.toNamed(Routes.PETUGAS_ACTIVITY_LOG),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xffF0F4FF),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.history,
+                          color: Color(0xff0D47A1),
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Log Aktivitas',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Color(0xff1A1C1E),
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Lihat riwayat aktivitas Anda',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xff6B7280),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: Color(0xff0D47A1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 34),
 
               SizedBox(

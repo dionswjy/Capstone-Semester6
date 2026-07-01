@@ -23,6 +23,8 @@ abstract class Routes {
   static const PETUGAS_PENGADUAN = _Paths.PETUGAS_PENGADUAN;
   static const PETUGAS_PROFILE = _Paths.PETUGAS_PROFILE;
   static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
+  static const ACTIVITY_LOG = _Paths.ACTIVITY_LOG;
+  static const PETUGAS_ACTIVITY_LOG = _Paths.PETUGAS_ACTIVITY_LOG;
 }
 
 abstract class _Paths {
@@ -47,4 +49,6 @@ abstract class _Paths {
   static const PETUGAS_PENGADUAN = '/petugas-pengaduan';
   static const PETUGAS_PROFILE = '/petugas-profile';
   static const FORGOT_PASSWORD = '/forgot-password';
+  static const ACTIVITY_LOG = '/activity-log';
+  static const PETUGAS_ACTIVITY_LOG = '/petugas-activity-log';
 }

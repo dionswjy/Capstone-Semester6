@@ -42,7 +42,7 @@ class DashboardView extends GetView<DashboardController> {
   }
 }
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends GetView<DashboardController> {
   const HomeTab({super.key});
 
   @override
@@ -50,7 +50,7 @@ class HomeTab extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.8),
+        backgroundColor: Colors.white.withValues(alpha: 0.8),
         elevation: 0,
         title: Row(
           children: [
@@ -73,61 +73,76 @@ class HomeTab extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Halo, Pak Budi!",
-              style: Get.textTheme.headlineLarge?.copyWith(
-                color: AppColors.primaryContainer,
-                fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        onRefresh: () => controller.fetchDashboardData(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Obx(
+                () => Text(
+                  "Halo, ${controller.userName.value}!",
+                  style: Get.textTheme.headlineLarge?.copyWith(
+                    color: AppColors.primaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              "Selamat pagi. Pantau penggunaan air bersih desa Anda hari ini.",
-              style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 16),
-            ),
-            const SizedBox(height: 32),
-            _buildSummaryCards(),
-            const SizedBox(height: 24),
-            _buildStatisticsChart(),
-            const SizedBox(height: 24),
-            _buildServicesMenu(),
-          ],
+              const SizedBox(height: 4),
+              const Text(
+                "Selamat pagi. Pantau penggunaan air bersih desa Anda hari ini.",
+                style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 16),
+              ),
+              const SizedBox(height: 32),
+              _buildSummaryCards(),
+              const SizedBox(height: 24),
+              _buildStatisticsChart(),
+              const SizedBox(height: 24),
+              _buildServicesMenu(),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSummaryCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildInfoCard(
-            icon: LucideIcons.waves,
-            iconBg: AppColors.primaryFixed,
-            label: "Penggunaan Air",
-            value: "24.5 m³",
-            subtitle: "3% lebih rendah",
-            badge: "Bulan Ini",
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: _buildInfoCard(
+              icon: LucideIcons.waves,
+              iconBg: AppColors.primaryFixed,
+              label: "Penggunaan Air",
+              value: controller.penggunaanAir.value,
+              subtitle: "3% lebih rendah",
+              badge: "Bulan Ini",
+            ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildInfoCard(
-            icon: LucideIcons.wallet,
-            iconBg: AppColors.secondaryFixed,
-            label: "Status Pembayaran",
-            value: "Belum Bayar",
-            valueColor: AppColors.error,
-            badge: "Tagihan Baru",
-            badgeBg: AppColors.errorContainer,
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildInfoCard(
+              icon: LucideIcons.wallet,
+              iconBg: AppColors.secondaryFixed,
+              label: "Status Pembayaran",
+              value: controller.statusPembayaran.value,
+              valueColor: controller.statusPembayaran.value == "Lunas"
+                  ? Colors.green
+                  : AppColors.error,
+              subtitle: controller.statusPembayaran.value == "Lunas" 
+                  ? "Sudah Terbayar" 
+                  : controller.totalTagihanStr.value,
+              badge: "Tagihan",
+              badgeBg: controller.statusPembayaran.value == "Lunas"
+                  ? Colors.green.shade100
+                  : AppColors.errorContainer,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -146,7 +161,7 @@ class HomeTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline.withOpacity(0.1)),
+        border: Border.all(color: AppColors.outline.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,6 +197,23 @@ class HomeTab extends StatelessWidget {
     );
   }
 
+  String _formatBulan(String rawBulan) {
+    try {
+      final parts = rawBulan.split('-');
+      if (parts.length == 2) {
+        final monthInt = int.tryParse(parts[1]);
+        if (monthInt != null && monthInt >= 1 && monthInt <= 12) {
+          const months = [
+            "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+            "Jul", "Agt", "Sep", "Okt", "Nov", "Des"
+          ];
+          return months[monthInt - 1];
+        }
+      }
+    } catch (_) {}
+    return rawBulan;
+  }
+
   Widget _buildStatisticsChart() {
     return Container(
       width: double.infinity,
@@ -189,18 +221,109 @@ class HomeTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline.withOpacity(0.1)),
+        border: Border.all(color: AppColors.outline.withValues(alpha: 0.1)),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Statistik Pemakaian", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          Text("Tren penggunaan 6 bulan terakhir", style: TextStyle(color: AppColors.outline, fontSize: 12)),
-          SizedBox(height: 24),
-          SizedBox(
-            height: 150,
-            child: Center(child: Text("Chart Placeholder")),
-          ),
+          const Text("Statistik Pemakaian", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text("Tren penggunaan 6 bulan terakhir", style: TextStyle(color: AppColors.outline, fontSize: 12)),
+          const SizedBox(height: 24),
+          Obx(() {
+            if (controller.isLoading.value) {
+              return const SizedBox(
+                height: 150,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final history = controller.usageHistory;
+            if (history.isEmpty) {
+              return const SizedBox(
+                height: 150,
+                child: Center(
+                  child: Text(
+                    "Belum ada data pemakaian",
+                    style: TextStyle(color: AppColors.onSurfaceVariant),
+                  ),
+                ),
+              );
+            }
+
+            double maxUsage = 0.0;
+            for (var item in history) {
+              if (item.penggunaan > maxUsage) {
+                maxUsage = item.penggunaan;
+              }
+            }
+            if (maxUsage == 0) maxUsage = 10.0;
+
+            return SizedBox(
+              height: 160,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: history.map((item) {
+                  double percentage = item.penggunaan / maxUsage;
+                  double barHeight = percentage * 100;
+                  if (item.penggunaan > 0 && barHeight < 10) {
+                    barHeight = 10;
+                  }
+
+                  return Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          item.penggunaan.toStringAsFixed(1).replaceAll('.0', ''),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryContainer,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: 24,
+                          height: barHeight,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF64B5F6),
+                                AppColors.primaryContainer,
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(6),
+                              topRight: Radius.circular(6),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryContainer.withValues(alpha: 0.15),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _formatBulan(item.bulan),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -246,13 +369,13 @@ class HomeTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.outline.withOpacity(0.1)),
+          border: Border.all(color: AppColors.outline.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.secondaryContainer.withOpacity(0.2), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: AppColors.secondaryContainer.withValues(alpha: 0.2), shape: BoxShape.circle),
               child: Icon(icon, color: AppColors.onSecondaryContainer),
             ),
             const SizedBox(height: 12),
