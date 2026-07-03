@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tirta_desa/app/data/models/meter_model.dart';
 
 import '../../../routes/app_pages.dart';
 import '../controllers/petugas_pelanggan_controller.dart';
@@ -30,10 +31,6 @@ class PetugasPelangganView
             );
           } else if (index == 2) {
             Get.offAllNamed(
-              Routes.PETUGAS_PENGADUAN,
-            );
-          } else if (index == 3) {
-            Get.offAllNamed(
               Routes.PETUGAS_PROFILE,
             );
           }
@@ -47,10 +44,6 @@ class PetugasPelangganView
           BottomNavigationBarItem(
             icon: Icon(Icons.speed_outlined),
             label: "Meteran",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            label: "Laporan",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
@@ -93,6 +86,7 @@ class PetugasPelangganView
 
               // SEARCH
               TextField(
+                controller: controller.searchController,
                 decoration: InputDecoration(
                   hintText:
                       "Cari Nama atau ID Pelanggan...",
@@ -113,13 +107,13 @@ class PetugasPelangganView
               const SizedBox(height: 24),
 
               // STAT
-              Row(
+              Obx(() => Row(
                 children: [
 
                   Expanded(
                     child: _statCard(
                       title: "Total Pelanggan",
-                      value: "1,284",
+                      value: controller.pelangganList.length.toString(),
                     ),
                   ),
 
@@ -132,60 +126,71 @@ class PetugasPelangganView
                     ),
                   ),
                 ],
-              ),
+              )),
 
               const SizedBox(height: 28),
 
               // LIST CUSTOMER
-              _customerCard(
-                name: "Budi Santoso",
-                id: "TD-2024-001",
-                address:
-                    "Jl. Mawar No. 12, RT 04/RW 02, Desa Tirta Jaya",
-                category: "Rumah Tangga A",
-                status: "AKTIF",
-                statusColor: Colors.blue,
-              ),
+              Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: CircularProgressIndicator(color: Color(0xff0D47A1)),
+                    ),
+                  );
+                }
 
-              _customerCard(
-                name: "Siti Aminah",
-                id: "TD-2024-005",
-                address:
-                    "Blok B5 No. 02, RT 01/RW 05, Desa Tirta Jaya",
-                category: "Sosial / Subsidi",
-                status: "SUBSIDI",
-                statusColor: Colors.grey,
-              ),
+                if (controller.hasError.value) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.red),
+                          const SizedBox(height: 8),
+                          const Text("Gagal memuat data pelanggan"),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: controller.refreshData,
+                            child: const Text("Coba Lagi"),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
-              _customerCard(
-                name: "Agus Pratama",
-                id: "TD-2024-082",
-                address:
-                    "Gg. Damai No. 04, RT 03/RW 01, Desa Tirta Jaya",
-                category: "Rumah Tangga B",
-                status: "MENUNGGAK",
-                statusColor: Colors.red,
-              ),
+                if (controller.filteredPelangganList.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Text("Tidak ada pelanggan ditemukan"),
+                    ),
+                  );
+                }
 
-              _customerCard(
-                name: "Diana Putri",
-                id: "TD-2024-112",
-                address:
-                    "Jl. Kenanga No. 88, RT 02/RW 03, Desa Tirta Jaya",
-                category: "Niaga Kecil",
-                status: "AKTIF",
-                statusColor: Colors.blue,
-              ),
+                return Column(
+                  children: controller.filteredPelangganList.map((p) {
+                    final status = p.statusPelanggan.toUpperCase();
+                    final Color statusColor = status == 'AKTIF'
+                        ? Colors.blue
+                        : (status == 'BLACKLIST' || status == 'NONAKTIF'
+                            ? Colors.red
+                            : Colors.grey);
 
-              _customerCard(
-                name: "Hendra Wijaya",
-                id: "TD-2024-045",
-                address:
-                    "Komp. Sejahtera C14, RT 05/RW 02, Desa Tirta Jaya",
-                category: "Rumah Tangga A",
-                status: "AKTIF",
-                statusColor: Colors.blue,
-              ),
+                    return _customerCard(
+                      pelanggan: p,
+                      name: p.nama,
+                      id: p.noMeter,
+                      address: p.alamat,
+                      category: p.kategori,
+                      status: status.isEmpty ? 'BARU' : status,
+                      statusColor: statusColor,
+                    );
+                  }).toList(),
+                );
+              }),
 
               const SizedBox(height: 100),
             ],
@@ -234,6 +239,7 @@ class PetugasPelangganView
   }
 
   Widget _customerCard({
+    required PelangganModel pelanggan,
     required String name,
     required String id,
     required String address,
@@ -417,6 +423,7 @@ class PetugasPelangganView
                         onPressed: () {
                           Get.toNamed(
                             Routes.PETUGAS_INPUT_METER,
+                            arguments: pelanggan,
                           );
                         },
 
@@ -442,6 +449,7 @@ class PetugasPelangganView
                       onTap: () {
                         Get.toNamed(
                           Routes.PETUGAS_METER_DETAIL,
+                          arguments: pelanggan,
                         );
                       },
 

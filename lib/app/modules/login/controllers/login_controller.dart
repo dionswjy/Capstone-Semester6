@@ -56,6 +56,12 @@ class LoginController extends GetxController {
     box.write("phone", user["phone"]);
     box.write("role", user["role"]);
 
+    // Simpan log login ke lokal
+    final userId = user["id"];
+    final loginLogs = box.read<List<dynamic>>("login_logs_$userId") ?? [];
+    loginLogs.add(DateTime.now().toIso8601String());
+    box.write("login_logs_$userId", loginLogs);
+
     final role = user["role"];
 
     // Ambil pelanggan_id di background (tidak block login)

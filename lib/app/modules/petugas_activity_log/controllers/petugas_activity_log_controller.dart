@@ -1,4 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
+import 'package:tirta_desa/app/data/models/meter_model.dart';
+import 'package:tirta_desa/app/data/services/meter_service.dart';
 
 class PetugasActivityLog {
   final String title;
@@ -14,17 +19,22 @@ class PetugasActivityLog {
   });
 }
 
-enum PetugasActivityLogType { inputMeter, pengaduan, pelanggan, profile, login }
+enum PetugasActivityLogType { inputMeter, profile, login }
 
 class PetugasActivityLogController extends GetxController {
+  final _box = GetStorage();
+  final _service = MeterService();
+
+  // ── States ────────────────────────────────────
+  var isLoading = false.obs;
+  var hasError = false.obs;
+
   final RxList<PetugasActivityLog> logs = <PetugasActivityLog>[].obs;
   final RxString filterType = 'Semua'.obs;
 
   final List<String> filterOptions = [
     'Semua',
-    'Input Meter',
-    'Pengaduan',
-    'Pelanggan',
+    'Catat Meter',
     'Profil',
     'Login',
   ];
@@ -32,9 +42,7 @@ class PetugasActivityLogController extends GetxController {
   List<PetugasActivityLog> get filteredLogs {
     if (filterType.value == 'Semua') return logs;
     final map = {
-      'Input Meter': PetugasActivityLogType.inputMeter,
-      'Pengaduan': PetugasActivityLogType.pengaduan,
-      'Pelanggan': PetugasActivityLogType.pelanggan,
+      'Catat Meter': PetugasActivityLogType.inputMeter,
       'Profil': PetugasActivityLogType.profile,
       'Login': PetugasActivityLogType.login,
     };
@@ -44,74 +52,106 @@ class PetugasActivityLogController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadDummyLogs();
+    _loadLogs();
   }
 
-  void _loadDummyLogs() {
-    final now = DateTime.now();
-    logs.assignAll([
-      PetugasActivityLog(
-        title: 'Login Berhasil',
-        description: 'Masuk ke aplikasi dari perangkat Android',
-        time: now.subtract(const Duration(minutes: 5)),
-        type: PetugasActivityLogType.login,
-      ),
-      PetugasActivityLog(
-        title: 'Input Meteran',
-        description: 'Catat meteran pelanggan Budi Santoso (TD-MET-88291)\nPenggunaan: 12 m³',
-        time: now.subtract(const Duration(hours: 1)),
-        type: PetugasActivityLogType.inputMeter,
-      ),
-      PetugasActivityLog(
-        title: 'Pengaduan Ditangani',
-        description: 'Pengaduan kebocoran pipa di Jl. Melati No. 12 selesai ditangani',
-        time: now.subtract(const Duration(hours: 3)),
-        type: PetugasActivityLogType.pengaduan,
-      ),
-      PetugasActivityLog(
-        title: 'Input Meteran',
-        description: 'Catat meteran pelanggan Siti Rahayu (TD-MET-77382)\nPenggunaan: 8 m³',
-        time: now.subtract(const Duration(hours: 4)),
-        type: PetugasActivityLogType.inputMeter,
-      ),
-      PetugasActivityLog(
-        title: 'Data Pelanggan Dilihat',
-        description: 'Lihat detail pelanggan Ahmad Fauzi (TD-2024-015)',
-        time: now.subtract(const Duration(days: 1)),
-        type: PetugasActivityLogType.pelanggan,
-      ),
-      PetugasActivityLog(
-        title: 'Login Berhasil',
-        description: 'Masuk ke aplikasi dari perangkat Android',
-        time: now.subtract(const Duration(days: 1, hours: 7)),
-        type: PetugasActivityLogType.login,
-      ),
-      PetugasActivityLog(
-        title: 'Input Meteran',
-        description: 'Catat meteran pelanggan Rudi Hartono (TD-MET-66210)\nPenggunaan: 15 m³',
-        time: now.subtract(const Duration(days: 2)),
-        type: PetugasActivityLogType.inputMeter,
-      ),
-      PetugasActivityLog(
-        title: 'Pengaduan Ditangani',
-        description: 'Pengaduan air keruh di Dusun Krajan dalam proses penanganan',
-        time: now.subtract(const Duration(days: 3)),
-        type: PetugasActivityLogType.pengaduan,
-      ),
-      PetugasActivityLog(
-        title: 'Data Profil Diperbarui',
-        description: 'Nomor telepon diubah ke 0812 3456 7890',
-        time: now.subtract(const Duration(days: 5)),
-        type: PetugasActivityLogType.profile,
-      ),
-      PetugasActivityLog(
-        title: 'Login Berhasil',
-        description: 'Masuk ke aplikasi dari perangkat Android',
-        time: now.subtract(const Duration(days: 7)),
-        type: PetugasActivityLogType.login,
-      ),
-    ]);
+  Future<void> _loadLogs() async {
+    final token = _box.read('token');
+    final userId = _box.read('id') ?? 0;
+    final name = _box.read('name') ?? 'Petugas';
+
+    if (token == null) return;
+
+    isLoading.value = true;
+    hasError.value = false;
+
+    try {
+      // 1. Fetch data dari backend
+      final results = await Future.wait([
+        _service.fetchPelanggan(token),
+        _service.fetchMeter(token),
+        _service.fetchCatatMeter(token),
+      ]);
+
+      final allPelanggan = results[0] as List<PelangganModel>;
+      final allMeters = results[1] as List<MeterModel>;
+      final allCatat = results[2] as List<CatatMeterModel>;
+
+      final tempLogs = <PetugasActivityLog>[];
+
+      // 2. Tambahkan log Login dari lokal
+      final loginTimestamps = _box.read<List<dynamic>>("login_logs_$userId") ?? [];
+      for (var ts in loginTimestamps) {
+        try {
+          final dt = DateTime.parse(ts.toString());
+          tempLogs.add(PetugasActivityLog(
+            title: 'Login Berhasil',
+            description: 'Masuk ke aplikasi TirtaDesa sebagai petugas.',
+            time: dt,
+            type: PetugasActivityLogType.login,
+          ));
+        } catch (_) {}
+      }
+
+      // 3. Tambahkan log Profil dari lokal
+      final profileTimestamps = _box.read<List<dynamic>>("profile_logs_$userId") ?? [];
+      for (var ts in profileTimestamps) {
+        try {
+          final dt = DateTime.parse(ts.toString());
+          tempLogs.add(PetugasActivityLog(
+            title: 'Profil Diperbarui',
+            description: 'Foto profil petugas berhasil diubah.',
+            time: dt,
+            type: PetugasActivityLogType.profile,
+          ));
+        } catch (_) {}
+      }
+
+      // 4. Tambahkan log Catat Meter dari backend
+      final petugasCatat = allCatat
+          .where((c) => c.petugasNama.toLowerCase().trim() == name.toLowerCase().trim())
+          .toList();
+
+      for (var c in petugasCatat) {
+        final meter = allMeters.firstWhereOrNull((m) => m.id == c.meterId);
+        final pelanggan = meter != null
+            ? allPelanggan.firstWhereOrNull((p) => p.id == meter.pelangganId)
+            : null;
+
+        final customerName = pelanggan?.nama ?? 'Pelanggan #${c.meterId}';
+        final noMeter = pelanggan?.noMeter ?? '-';
+
+        // Parsing bulan ke format waktu logs
+        DateTime logTime;
+        try {
+          logTime = DateFormat('yyyy-MM').parse(c.bulan);
+          // Set ke tengah bulan/hari
+          logTime = DateTime(logTime.year, logTime.month, 15, 12, 0);
+        } catch (_) {
+          logTime = DateTime.now();
+        }
+
+        tempLogs.add(PetugasActivityLog(
+          title: 'Input Meteran',
+          description: 'Mencatat meteran pelanggan $customerName ($noMeter)\nAngka kini: ${c.angkaMeterKini.toStringAsFixed(2)} m³, pemakaian: ${c.penggunaanM3.toStringAsFixed(2)} m³',
+          time: logTime,
+          type: PetugasActivityLogType.inputMeter,
+        ));
+      }
+
+      // 5. Urutkan berdasarkan waktu (terbaru dahulu)
+      tempLogs.sort((a, b) => b.time.compareTo(a.time));
+
+      logs.assignAll(tempLogs);
+    } catch (e) {
+      debugPrint('_loadLogs error: $e');
+      hasError.value = true;
+    } finally {
+      isLoading.value = false;
+    }
   }
+
+  Future<void> refreshData() => _loadLogs();
 
   void setFilter(String filter) {
     filterType.value = filter;

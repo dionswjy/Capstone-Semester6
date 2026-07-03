@@ -30,8 +30,6 @@ import '../modules/petugas_meter_detail/bindings/petugas_meter_detail_binding.da
 import '../modules/petugas_meter_detail/views/petugas_meter_detail_view.dart';
 import '../modules/petugas_pelanggan/bindings/petugas_pelanggan_binding.dart';
 import '../modules/petugas_pelanggan/views/petugas_pelanggan_view.dart';
-import '../modules/petugas_pengaduan/bindings/petugas_pengaduan_binding.dart';
-import '../modules/petugas_pengaduan/views/petugas_pengaduan_view.dart';
 import '../modules/petugas_profile/bindings/petugas_profile_binding.dart';
 import '../modules/petugas_profile/views/petugas_profile_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
@@ -129,11 +127,7 @@ class AppPages {
       page: () => const PetugasInputMeterView(),
       binding: PetugasInputMeterBinding(),
     ),
-    GetPage(
-      name: _Paths.PETUGAS_PENGADUAN,
-      page: () => const PetugasPengaduanView(),
-      binding: PetugasPengaduanBinding(),
-    ),
+
     GetPage(
       name: _Paths.PETUGAS_PROFILE,
       page: () => const PetugasProfileView(),

@@ -20,41 +20,97 @@ class PetugasActivityLogView
         foregroundColor: const Color(0xff0D47A1),
         iconTheme: const IconThemeData(color: Color(0xff0D47A1)),
       ),
-      body: Column(
-        children: [
-          _buildFilterBar(),
-          Expanded(
-            child: Obx(() {
-              final logs = controller.filteredLogs;
-              if (logs.isEmpty) {
-                return _buildEmptyState();
-              }
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
-                itemCount: logs.length,
-                itemBuilder: (context, index) {
-                  final log = logs[index];
-                  final prevLog = index > 0 ? logs[index - 1] : null;
-                  final showDateHeader = prevLog == null ||
-                      !_isSameDay(log.time, prevLog.time);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (showDateHeader) _buildDateHeader(log.time),
-                      _buildLogCard(log),
-                    ],
-                  );
-                },
-              );
-            }),
-          ),
-        ],
-      ),
+      // Satu Obx tunggal yang membaca SEMUA observables yang diperlukan
+      body: Obx(() {
+        final isLoading = controller.isLoading.value;
+        final hasError = controller.hasError.value;
+        final logs = controller.filteredLogs; // mengakses filterType.value & logs (RxList)
+        final selectedFilter = controller.filterType.value;
+
+        // ── Loading state ───────────────────────────
+        if (isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xff0D47A1)),
+          );
+        }
+
+        // ── Error state ─────────────────────────────
+        if (hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.wifi_off_rounded,
+                    size: 56, color: Colors.red),
+                const SizedBox(height: 12),
+                const Text('Gagal memuat log aktivitas',
+                    style: TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('Pastikan server aktif dan koneksi tersedia',
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xff0D47A1)),
+                  icon: const Icon(Icons.refresh, color: Colors.white),
+                  label: const Text('Coba Lagi',
+                      style: TextStyle(color: Colors.white)),
+                  onPressed: controller.refreshData,
+                ),
+              ],
+            ),
+          );
+        }
+
+        // ── Konten utama ────────────────────────────
+        return Column(
+          children: [
+            // Filter bar — menerima nilai langsung dari Obx terluar
+            _buildFilterBar(selectedFilter),
+
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: controller.refreshData,
+                child: logs.isEmpty
+                    ? SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Container(
+                          height: MediaQuery.of(context).size.height - 200,
+                          alignment: Alignment.center,
+                          child: _buildEmptyState(),
+                        ),
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        itemCount: logs.length,
+                        itemBuilder: (context, index) {
+                          final log = logs[index];
+                          final prevLog = index > 0 ? logs[index - 1] : null;
+                          final showDateHeader = prevLog == null ||
+                              !_isSameDay(log.time, prevLog.time);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (showDateHeader)
+                                _buildDateHeader(log.time),
+                              _buildLogCard(log),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _buildFilterBar() {
+  // Filter bar menerima selectedFilter string agar tidak perlu Obx baru di dalamnya
+  Widget _buildFilterBar(String selectedFilter) {
     return Container(
       color: Colors.white,
       child: Column(
@@ -62,46 +118,45 @@ class PetugasActivityLogView
           const Divider(height: 1),
           SizedBox(
             height: 52,
-            child: Obx(() => ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  itemCount: controller.filterOptions.length,
-                  itemBuilder: (context, index) {
-                    final option = controller.filterOptions[index];
-                    final isSelected =
-                        controller.filterType.value == option;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => controller.setFilter(option),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? const Color(0xff0D47A1)
-                                : const Color(0xffF0F4FF),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            option,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xff0D47A1),
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 12,
-                            ),
-                          ),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: controller.filterOptions.length,
+              itemBuilder: (context, index) {
+                final option = controller.filterOptions[index];
+                final isSelected = selectedFilter == option;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () => controller.setFilter(option),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xff0D47A1)
+                            : const Color(0xffF0F4FF),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        option,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xff0D47A1),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 12,
                         ),
                       ),
-                    );
-                  },
-                )),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -168,7 +223,7 @@ class PetugasActivityLogView
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -181,7 +236,7 @@ class PetugasActivityLogView
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(iconData, color: color, size: 22),
@@ -225,38 +280,36 @@ class PetugasActivityLogView
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xffF0F4FF),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.history,
-              size: 48,
-              color: Color(0xff0D47A1),
-            ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Color(0xffF0F4FF),
+            shape: BoxShape.circle,
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Tidak ada aktivitas',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Color(0xff374151),
-            ),
+          child: const Icon(
+            Icons.history,
+            size: 48,
+            color: Color(0xff0D47A1),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Belum ada log aktivitas untuk filter ini.',
-            style: TextStyle(color: Color(0xff9CA3AF), fontSize: 13),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Tidak ada aktivitas',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Color(0xff374151),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Belum ada log aktivitas untuk filter ini.',
+          style: TextStyle(color: Color(0xff9CA3AF), fontSize: 13),
+        ),
+      ],
     );
   }
 
@@ -264,10 +317,6 @@ class PetugasActivityLogView
     switch (type) {
       case PetugasActivityLogType.inputMeter:
         return Icons.speed_outlined;
-      case PetugasActivityLogType.pengaduan:
-        return Icons.bar_chart_outlined;
-      case PetugasActivityLogType.pelanggan:
-        return Icons.people_outline;
       case PetugasActivityLogType.profile:
         return Icons.person_outline;
       case PetugasActivityLogType.login:
@@ -279,10 +328,6 @@ class PetugasActivityLogView
     switch (type) {
       case PetugasActivityLogType.inputMeter:
         return const Color(0xff6A1B9A);
-      case PetugasActivityLogType.pengaduan:
-        return const Color(0xffE65100);
-      case PetugasActivityLogType.pelanggan:
-        return const Color(0xff0D47A1);
       case PetugasActivityLogType.profile:
         return const Color(0xff007C89);
       case PetugasActivityLogType.login:

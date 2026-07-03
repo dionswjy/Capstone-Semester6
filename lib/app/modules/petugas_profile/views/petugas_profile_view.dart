@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../routes/app_pages.dart';
 import '../controllers/petugas_profile_controller.dart';
@@ -11,13 +13,11 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF7F8FB),
-
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
+        currentIndex: 2,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xff00DDEB),
         unselectedItemColor: Colors.grey,
-
         onTap: (index) {
           if (index == 0) {
             Get.offAllNamed(
@@ -29,15 +29,10 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
             );
           } else if (index == 2) {
             Get.offAllNamed(
-              Routes.PETUGAS_PENGADUAN,
-            );
-          } else if (index == 3) {
-            Get.offAllNamed(
               Routes.PETUGAS_PROFILE,
             );
           }
         },
-
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -48,16 +43,11 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
             label: "Meteran",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            label: "Laporan",
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: "Profil",
           ),
         ],
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -77,55 +67,74 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
 
               const SizedBox(height: 46),
 
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  CircleAvatar(
-                    radius: 62,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 56,
-                      backgroundColor: const Color(0xff0D47A1),
-                      child: ClipOval(
-                        child: Image.network(
-                          'https://ui-avatars.com/api/?name=Agus+Susanto&background=0D47A1&color=FFFFFF&size=256',
-                          width: 112,
-                          height: 112,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.person,
-                            size: 70,
-                            color: Colors.white,
-                          ),
-                        ),
+              // ── PROFILE PHOTO (WITH CLICK-TO-EDIT) ──
+              GestureDetector(
+                onTap: () => _showPhotoPickerDialog(context),
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 62,
+                      backgroundColor: Colors.white,
+                      child: Obx(() {
+                        final path = controller.profilePhotoPath.value;
+                        if (path.isNotEmpty && File(path).existsSync()) {
+                          return CircleAvatar(
+                            radius: 56,
+                            backgroundColor: const Color(0xff0D47A1),
+                            backgroundImage: FileImage(File(path)),
+                          );
+                        } else {
+                          final encodedName = Uri.encodeComponent(
+                              controller.petugasNama.value);
+                          return CircleAvatar(
+                            radius: 56,
+                            backgroundColor: const Color(0xff0D47A1),
+                            child: ClipOval(
+                              child: Image.network(
+                                'https://ui-avatars.com/api/?name=$encodedName&background=0D47A1&color=FFFFFF&size=256',
+                                width: 112,
+                                height: 112,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                  Icons.person,
+                                  size: 70,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      }),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xff0D47A1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 20,
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xff0D47A1),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    child: const Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
               const SizedBox(height: 22),
 
-              const Text(
-                "Agus Susanto",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Obx(() => Text(
+                    controller.petugasNama.value,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  )),
 
               const SizedBox(height: 10),
 
@@ -138,62 +147,38 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: const Text(
-                  "ID Petugas: TD-STAFF-001",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black54,
-                  ),
-                ),
+                child: Obx(() => Text(
+                      "ID Petugas: TD-STAFF-${controller.petugasId.value.toString().padLeft(3, '0')}",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black54,
+                      ),
+                    )),
               ),
 
               const SizedBox(height: 34),
 
-              _sectionCard(
-                icon: Icons.person_outline,
-                title: "INFORMASI AKUN",
-                children: const [
-                  _InfoItem(
-                    icon: Icons.email_outlined,
-                    label: "Email",
-                    value: "agus.susanto@desa.id",
-                  ),
-                  _InfoItem(
-                    icon: Icons.phone_outlined,
-                    label: "Phone",
-                    value: "0812 3456 7890",
-                  ),
-                  _InfoItem(
-                    icon: Icons.location_on_outlined,
-                    label: "Address",
-                    value: "Dusun Krajan, RT 02/RW 01",
-                  ),
-                ],
-              ),
+              // ── INFORMASI AKUN CARD ────────────────
+              Obx(() => _sectionCard(
+                    icon: Icons.person_outline,
+                    title: "INFORMASI AKUN",
+                    children: [
+                      _InfoItem(
+                        icon: Icons.email_outlined,
+                        label: "Email",
+                        value: controller.petugasEmail.value,
+                      ),
+                      _InfoItem(
+                        icon: Icons.phone_outlined,
+                        label: "Telepon",
+                        value: controller.petugasPhone.value,
+                      ),
+                    ],
+                  )),
 
               const SizedBox(height: 24),
 
-              _sectionCard(
-                icon: Icons.map_outlined,
-                title: "TUGAS & WILAYAH",
-                children: const [
-                  _InfoItem(
-                    icon: Icons.business_outlined,
-                    label: "Wilayah Kerja",
-                    value: "Wilayah III - Dusun Krajan",
-                  ),
-                  _InfoItem(
-                    icon: Icons.trending_up,
-                    label: "Status",
-                    value: "● Aktif",
-                    valueColor: Color(0xff007C89),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // Log Aktivitas Card
+              // ── LOG AKTIVITAS CARD ─────────────────
               GestureDetector(
                 onTap: () => Get.toNamed(Routes.PETUGAS_ACTIVITY_LOG),
                 child: Container(
@@ -206,7 +191,7 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
                     border: Border.all(color: Colors.grey.shade200),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -261,6 +246,7 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
 
               const SizedBox(height: 34),
 
+              // ── TOMBOL KELUAR ──────────────────────
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -295,6 +281,52 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
     );
   }
 
+  void _showPhotoPickerDialog(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(22),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ganti Foto Profil',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 18),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: Color(0xff0D47A1)),
+              title: const Text('Ambil Foto Kamera'),
+              onTap: () {
+                Get.back();
+                controller.changeProfilePhoto(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Color(0xff0D47A1)),
+              title: const Text('Pilih dari Galeri'),
+              onTap: () {
+                Get.back();
+                controller.changeProfilePhoto(ImageSource.gallery);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _sectionCard({
     required IconData icon,
     required String title,
@@ -309,7 +341,7 @@ class PetugasProfileView extends GetView<PetugasProfileController> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -348,13 +380,11 @@ class _InfoItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final Color? valueColor;
 
   const _InfoItem({
     required this.icon,
     required this.label,
     required this.value,
-    this.valueColor,
   });
 
   @override
@@ -384,9 +414,9 @@ class _InfoItem extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
-                    color: valueColor ?? Colors.black87,
+                    color: Colors.black87,
                   ),
                 ),
               ],
