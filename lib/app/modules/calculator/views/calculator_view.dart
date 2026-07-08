@@ -118,9 +118,9 @@ class CalculatorView extends GetView<CalculatorController> {
               ],
             ),
             const Divider(color: Colors.white24, height: 32),
-            _resultRow("Estimasi Tagihan", "Rp ${controller.estimation.value - controller.serviceFee}"),
+            _resultRow("Estimasi Tagihan", controller.formatRupiah(controller.estimation.value - controller.serviceFee)),
             const SizedBox(height: 8),
-            _resultRow("Biaya Layanan", "Rp ${controller.serviceFee}"),
+            _resultRow("Biaya Layanan", controller.formatRupiah(controller.serviceFee)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -129,7 +129,7 @@ class CalculatorView extends GetView<CalculatorController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text("Total Dibayar", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryContainer)),
-                  Text("Rp ${controller.estimation.value}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primaryContainer)),
+                  Text(controller.formatRupiah(controller.estimation.value), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primaryContainer)),
                 ],
               ),
             ),
@@ -152,7 +152,7 @@ class CalculatorView extends GetView<CalculatorController> {
   Widget _buildInfoGrid() {
     return Row(
       children: [
-        Expanded(child: _infoBox("Tarif Per m³", "Rp ${controller.ratePerM3}")),
+        Expanded(child: _infoBox("Tarif Per m³", controller.formatRupiah(controller.ratePerM3))),
         const SizedBox(width: 16),
         Expanded(
           child: Container(

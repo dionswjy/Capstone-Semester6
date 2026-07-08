@@ -107,25 +107,9 @@ class PetugasPelangganView
               const SizedBox(height: 24),
 
               // STAT
-              Obx(() => Row(
-                children: [
-
-                  Expanded(
-                    child: _statCard(
-                      title: "Total Pelanggan",
-                      value: controller.pelangganList.length.toString(),
-                    ),
-                  ),
-
-                  const SizedBox(width: 14),
-
-                  Expanded(
-                    child: _statCard(
-                      title: "Wilayah Aktif",
-                      value: "12",
-                    ),
-                  ),
-                ],
+              Obx(() => _statCard(
+                title: "Total Pelanggan",
+                value: controller.pelangganList.length.toString(),
               )),
 
               const SizedBox(height: 28),
@@ -262,7 +246,7 @@ class PetugasPelangganView
             padding: const EdgeInsets.all(16),
 
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.06),
+              color: statusColor.withValues(alpha: 0.06),
 
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(22),
@@ -275,7 +259,7 @@ class PetugasPelangganView
 
                 CircleAvatar(
                   backgroundColor:
-                      statusColor.withOpacity(0.1),
+                      statusColor.withValues(alpha: 0.1),
 
                   child: Icon(
                     Icons.person_outline,
@@ -320,7 +304,7 @@ class PetugasPelangganView
 
                   decoration: BoxDecoration(
                     color:
-                        statusColor.withOpacity(0.1),
+                        statusColor.withValues(alpha: 0.1),
                     borderRadius:
                         BorderRadius.circular(20),
                   ),

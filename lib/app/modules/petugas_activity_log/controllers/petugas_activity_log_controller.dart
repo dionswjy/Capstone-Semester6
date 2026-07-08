@@ -121,14 +121,17 @@ class PetugasActivityLogController extends GetxController {
         final customerName = pelanggan?.nama ?? 'Pelanggan #${c.meterId}';
         final noMeter = pelanggan?.noMeter ?? '-';
 
-        // Parsing bulan ke format waktu logs
         DateTime logTime;
-        try {
-          logTime = DateFormat('yyyy-MM').parse(c.bulan);
-          // Set ke tengah bulan/hari
-          logTime = DateTime(logTime.year, logTime.month, 15, 12, 0);
-        } catch (_) {
-          logTime = DateTime.now();
+        if (c.createdAt != null) {
+          logTime = c.createdAt!;
+        } else {
+          try {
+            logTime = DateFormat('yyyy-MM').parse(c.bulan);
+            // Set ke akhir bulan jika tidak ada created_at (untuk data lama)
+            logTime = DateTime(logTime.year, logTime.month, 28, 12, 0);
+          } catch (_) {
+            logTime = DateTime.now();
+          }
         }
 
         tempLogs.add(PetugasActivityLog(

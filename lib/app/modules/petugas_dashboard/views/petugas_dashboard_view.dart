@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../routes/app_pages.dart';
 import '../controllers/petugas_dashboard_controller.dart';
@@ -9,8 +10,7 @@ import '../controllers/petugas_dashboard_controller.dart';
 class PetugasDashboardView extends GetView<PetugasDashboardController> {
   const PetugasDashboardView({super.key});
 
-  // Titik tengah peta – sesuaikan dengan lokasi desa
-  static const LatLng _desaCenter = LatLng(-7.250445, 112.768845);
+
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +85,7 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                 const SizedBox(height: 12),
 
                 const Text(
-                  'Dashboard Petugas Lapangan • Desa Sumber Jaya',
+                  'Dashboard Petugas Lapangan • Desa Pagerbarang',
                   style: TextStyle(
                     fontSize: 17,
                     color: Colors.grey,
@@ -172,36 +172,52 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Rute Tugas Hari Ini',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                    const Flexible(
+                      child: Text(
+                        'Lokasi Saya Sekarang',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Row(
-                      children: const [
-                        Text(
-                          'Detail Rute',
-                          style: TextStyle(
-                            color: Color(0xff0D47A1),
-                            fontWeight: FontWeight.w600,
+                    // Tombol "Buka Maps"
+                    GestureDetector(
+                      onTap: () => _openInGoogleMaps(
+                        controller.currentLat.value,
+                        controller.currentLng.value,
+                      ),
+                      child: const Row(
+                        children: [
+                          Text(
+                            'Buka Maps',
+                            style: TextStyle(
+                              color: Color(0xff0D47A1),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(
-                          Icons.chevron_right,
-                          color: Color(0xff0D47A1),
-                        ),
-                      ],
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.open_in_new,
+                            color: Color(0xff0D47A1),
+                            size: 18,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 18),
 
-                // MAP (flutter_map + OpenStreetMap)
-                _buildMap(),
+                // MAP reaktif GPS
+                Obx(() => _buildMap(
+                      lat: controller.currentLat.value,
+                      lng: controller.currentLng.value,
+                      isLocating: controller.isLocating.value,
+                      locationError: controller.locationError.value,
+                    )),
 
                 const SizedBox(height: 100),
               ],
@@ -212,45 +228,227 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
     );
   }
 
-  Widget _buildMap() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: SizedBox(
-        height: 260,
-        child: FlutterMap(
-          options: MapOptions(
-            initialCenter: _desaCenter,
-            initialZoom: 14.0,
-            interactionOptions: const InteractionOptions(
-              flags: InteractiveFlag.all,
-            ),
-          ),
-          children: [
-            // Layer peta OpenStreetMap – gratis, tanpa API key
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.tirta_desa',
-              maxZoom: 19,
-            ),
+  /// Buka Google Maps di koordinat tertentu
+  Future<void> _openInGoogleMaps(double lat, double lng) async {
+    final Uri googleMapsUri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+    );
+    final Uri geoUri = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
 
-            // Marker lokasi desa / titik tugas
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: _desaCenter,
-                  width: 48,
-                  height: 48,
-                  child: const Icon(
-                    Icons.location_pin,
-                    color: Color(0xff0D47A1),
-                    size: 48,
+    // Coba buka via geo: scheme (lebih akurat di Android)
+    if (await canLaunchUrl(geoUri)) {
+      await launchUrl(geoUri);
+    } else if (await canLaunchUrl(googleMapsUri)) {
+      await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
+    } else {
+      Get.snackbar(
+        'Tidak bisa membuka Maps',
+        'Pastikan Google Maps terinstall di perangkat',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  Widget _buildMap({
+    required double lat,
+    required double lng,
+    required bool isLocating,
+    required String locationError,
+  }) {
+    final currentPoint = LatLng(lat, lng);
+
+    return Stack(
+      children: [
+        // Peta utama – bisa diklik untuk buka Google Maps
+        GestureDetector(
+          onTap: () => _openInGoogleMaps(lat, lng),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: SizedBox(
+              height: 260,
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: currentPoint,
+                  initialZoom: 15.0,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.all,
                   ),
                 ),
-              ],
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.tirta_desa',
+                    maxZoom: 19,
+                  ),
+                  // Marker lokasi petugas (GPS)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: currentPoint,
+                        width: 56,
+                        height: 56,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Lingkaran biru transparan
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xff0D47A1).withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.my_location,
+                              color: Color(0xff0D47A1),
+                              size: 32,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
-      ),
+
+        // Overlay: loading GPS
+        if (isLocating)
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xff0D47A1),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Mencari lokasi...',
+                    style: TextStyle(fontSize: 12, color: Color(0xff0D47A1)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // Overlay: error GPS
+        if (!isLocating && locationError.isNotEmpty)
+          Positioned(
+            top: 12,
+            left: 12,
+            right: 60,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xffFDECEC),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.gps_off, color: Colors.red, size: 14),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      locationError,
+                      style:
+                          const TextStyle(fontSize: 11, color: Colors.red),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // Tombol refresh lokasi (pojok kanan atas peta)
+        Positioned(
+          top: 12,
+          right: 12,
+          child: GestureDetector(
+            onTap: () => controller.fetchCurrentLocation(),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: Obx(() => controller.isLocating.value
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xff0D47A1),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.gps_fixed,
+                      color: Color(0xff0D47A1),
+                      size: 20,
+                    )),
+            ),
+          ),
+        ),
+
+        // Badge "Ketuk untuk buka Maps"
+        Positioned(
+          bottom: 12,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.touch_app, color: Colors.white, size: 14),
+                  SizedBox(width: 6),
+                  Text(
+                    'Ketuk peta untuk buka Google Maps',
+                    style: TextStyle(color: Colors.white, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

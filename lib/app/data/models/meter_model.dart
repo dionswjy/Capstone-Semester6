@@ -97,6 +97,7 @@ class CatatMeterModel {
   final double angkaMeterKini;
   final double penggunaanM3;
   final String statusVerifikasi;
+  final DateTime? createdAt;
 
   CatatMeterModel({
     required this.id,
@@ -107,6 +108,7 @@ class CatatMeterModel {
     required this.angkaMeterKini,
     required this.penggunaanM3,
     required this.statusVerifikasi,
+    this.createdAt,
   });
 
   factory CatatMeterModel.fromJson(Map<String, dynamic> json) {
@@ -119,6 +121,7 @@ class CatatMeterModel {
       angkaMeterKini: (json['angka_meter_kini'] ?? 0).toDouble(),
       penggunaanM3: (json['penggunaan_m3'] ?? 0).toDouble(),
       statusVerifikasi: json['status_verifikasi'] ?? 'pending',
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString())?.toLocal() : null,
     );
   }
 }

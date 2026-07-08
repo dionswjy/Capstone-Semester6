@@ -19,37 +19,79 @@ class ActivityLogView extends GetView<ActivityLogController> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: AppColors.onSurface,
-      ),
-      body: Column(
-        children: [
-          _buildFilterBar(),
-          Expanded(
-            child: Obx(() {
-              final logs = controller.filteredLogs;
-              if (logs.isEmpty) {
-                return _buildEmptyState();
-              }
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: logs.length,
-                itemBuilder: (context, index) {
-                  final log = logs[index];
-                  final prevLog = index > 0 ? logs[index - 1] : null;
-                  final showDateHeader = prevLog == null ||
-                      !_isSameDay(log.time, prevLog.time);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (showDateHeader) _buildDateHeader(log.time),
-                      _buildLogCard(log),
-                    ],
-                  );
-                },
-              );
-            }),
-          ),
+        actions: [
+          Obx(() => controller.isLoading.value
+              ? const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primaryContainer,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: controller.loadActivityLogs,
+                  icon: const Icon(LucideIcons.refreshCw, size: 18),
+                  tooltip: 'Muat ulang',
+                )),
         ],
       ),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primaryContainer),
+          );
+        }
+        if (controller.hasError.value) {
+          return _buildErrorState(controller.errorMessage.value);
+        }
+
+        final logs = controller.filteredLogs;
+
+        return Column(
+          children: [
+            _buildFilterBar(),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: controller.loadActivityLogs,
+                color: AppColors.primaryContainer,
+                child: logs.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            child: _buildEmptyState(),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        itemCount: logs.length,
+                        itemBuilder: (context, index) {
+                          final log = logs[index];
+                          final prevLog = index > 0 ? logs[index - 1] : null;
+                          final showDateHeader = prevLog == null ||
+                              !_isSameDay(log.time, prevLog.time);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (showDateHeader) _buildDateHeader(log.time),
+                              _buildLogCard(log),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 
@@ -61,49 +103,49 @@ class ActivityLogView extends GetView<ActivityLogController> {
           const Divider(height: 1),
           SizedBox(
             height: 52,
-            child: Obx(() => ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: controller.filterOptions.length,
-                  itemBuilder: (context, index) {
-                    final option = controller.filterOptions[index];
-                    final isSelected = controller.filterType.value == option;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => controller.setFilter(option),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryContainer
-                                : AppColors.surface,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryContainer
-                                  : Colors.transparent,
-                            ),
-                          ),
-                          child: Text(
-                            option,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppColors.onSurfaceVariant,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 12,
-                            ),
-                          ),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: controller.filterOptions.length,
+              itemBuilder: (context, index) {
+                final option = controller.filterOptions[index];
+                final isSelected = controller.filterType.value == option;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () => controller.setFilter(option),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primaryContainer
+                            : AppColors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.primaryContainer
+                              : Colors.transparent,
                         ),
                       ),
-                    );
-                  },
-                )),
+                      child: Text(
+                        option,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.onSurfaceVariant,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -158,7 +200,7 @@ class ActivityLogView extends GetView<ActivityLogController> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -171,7 +213,7 @@ class ActivityLogView extends GetView<ActivityLogController> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(iconData, color: color, size: 20),
@@ -245,6 +287,36 @@ class ActivityLogView extends GetView<ActivityLogController> {
             style: TextStyle(color: AppColors.outline, fontSize: 13),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(LucideIcons.wifiOff, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: controller.loadActivityLogs,
+              icon: const Icon(LucideIcons.refreshCw, size: 16),
+              label: const Text('Coba Lagi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryContainer,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

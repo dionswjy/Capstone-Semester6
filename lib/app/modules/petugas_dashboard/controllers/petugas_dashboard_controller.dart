@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:tirta_desa/app/data/models/petugas_dashboard_model.dart';
@@ -22,11 +23,18 @@ class PetugasDashboardController extends GetxController {
   var isLoading = false.obs;
   var hasError = false.obs;
 
+  // GPS / Lokasi
+  RxDouble currentLat = (-7.250445).obs;
+  RxDouble currentLng = (112.768845).obs;
+  var isLocating = false.obs;
+  var locationError = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
     _loadUserFromStorage();
     fetchDashboardData();
+    fetchCurrentLocation();
   }
 
   void _loadUserFromStorage() {
@@ -62,6 +70,56 @@ class PetugasDashboardController extends GetxController {
       hasError.value = true;
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Ambil koordinat GPS petugas saat ini
+  Future<void> fetchCurrentLocation() async {
+    isLocating.value = true;
+    locationError.value = '';
+
+    try {
+      // 1. Cek apakah layanan lokasi aktif
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        locationError.value = 'GPS tidak aktif di perangkat';
+        isLocating.value = false;
+        return;
+      }
+
+      // 2. Cek & minta izin
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          locationError.value = 'Izin lokasi ditolak';
+          isLocating.value = false;
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        locationError.value = 'Izin lokasi diblokir. Buka Pengaturan untuk mengaktifkan.';
+        isLocating.value = false;
+        return;
+      }
+
+      // 3. Ambil posisi
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+
+      currentLat.value = position.latitude;
+      currentLng.value = position.longitude;
+      debugPrint('GPS: ${position.latitude}, ${position.longitude}');
+    } catch (e) {
+      locationError.value = 'Gagal ambil lokasi: $e';
+      debugPrint('fetchCurrentLocation error: $e');
+    } finally {
+      isLocating.value = false;
     }
   }
 }
