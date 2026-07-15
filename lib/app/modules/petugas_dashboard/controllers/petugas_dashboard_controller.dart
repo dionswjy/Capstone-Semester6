@@ -24,8 +24,8 @@ class PetugasDashboardController extends GetxController {
   var hasError = false.obs;
 
   // GPS / Lokasi
-  RxDouble currentLat = (-7.250445).obs;
-  RxDouble currentLng = (112.768845).obs;
+  RxDouble currentLat = (-7.01567).obs;
+  RxDouble currentLng = (109.05428).obs;
   var isLocating = false.obs;
   var locationError = ''.obs;
 

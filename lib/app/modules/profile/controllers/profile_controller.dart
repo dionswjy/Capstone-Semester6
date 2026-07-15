@@ -67,6 +67,11 @@ class ProfileController extends GetxController {
         box.write("name", updatedUser["name"]);
         box.write("phone", updatedUser["phone"]);
         
+        // Simpan log update profil ke lokal
+        final profileLogs = box.read<List<dynamic>>("profile_logs_${userId.value}") ?? [];
+        profileLogs.add(DateTime.now().toIso8601String());
+        box.write("profile_logs_${userId.value}", profileLogs);
+
         // Reload local variables
         loadUserData();
 

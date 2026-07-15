@@ -10,96 +10,76 @@ import '../controllers/petugas_dashboard_controller.dart';
 class PetugasDashboardView extends GetView<PetugasDashboardController> {
   const PetugasDashboardView({super.key});
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F6FA),
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xff00DDEB),
-        unselectedItemColor: Colors.grey,
-
-        onTap: (index) {
-          if (index == 0) {
-            Get.offAllNamed(Routes.PETUGAS_DASHBOARD);
-          } else if (index == 1) {
-            Get.offAllNamed(Routes.PETUGAS_PELANGGAN);
-          } else if (index == 2) {
-            Get.offAllNamed(Routes.PETUGAS_PROFILE);
-          }
-        },
-
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.speed_outlined),
-            label: 'Meteran',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
-          ),
-        ],
+      backgroundColor: const Color(0xffF8FAFC),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: 0,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: const Color(0xff0D47A1),
+          unselectedItemColor: Colors.grey.shade500,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          onTap: (index) {
+            if (index == 0) {
+              Get.offAllNamed(Routes.PETUGAS_DASHBOARD);
+            } else if (index == 1) {
+              Get.offAllNamed(Routes.PETUGAS_PELANGGAN);
+            } else if (index == 2) {
+              Get.offAllNamed(Routes.PETUGAS_PROFILE);
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_rounded),
+              label: 'Beranda',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.speed_outlined),
+              activeIcon: Icon(Icons.speed_rounded),
+              label: 'Meteran',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person_rounded),
+              label: 'Profil',
+            ),
+          ],
+        ),
       ),
-
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => controller.fetchDashboardData(),
+          color: const Color(0xff0D47A1),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header brand
-                const Text(
-                  'TirtaDesa',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xff0D47A1),
-                  ),
-                ),
+                // Welcome Banner
+                _buildWelcomeBanner(),
 
-                const SizedBox(height: 36),
+                const SizedBox(height: 28),
 
-                // Salam petugas (data dari storage)
-                Obx(() => Text(
-                      'Halo,\n${controller.userName.value}',
-                      style: const TextStyle(
-                        fontSize: 42,
-                        height: 1.1,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xff0D47A1),
-                      ),
-                    )),
-
-                const SizedBox(height: 12),
-
-                const Text(
-                  'Dashboard Petugas Lapangan • Desa Pagerbarang',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.grey,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Loading / Error state
+                // Loading / Error / Content state
                 Obx(() {
                   if (controller.isLoading.value) {
                     return const Center(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
+                        padding: EdgeInsets.symmetric(vertical: 40),
                         child: CircularProgressIndicator(
                           color: Color(0xff0D47A1),
                         ),
@@ -112,114 +92,41 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                   }
 
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // CARD TOTAL PELANGGAN
-                      Obx(() => _dashboardCard(
-                            title: 'TOTAL PELANGGAN',
-                            value: controller.totalPelanggan.value.toString(),
-                            icon: Icons.groups_2_outlined,
-                            badge: '${controller.totalMeter.value} Meteran',
-                            backgroundColor: Colors.white,
-                            valueColor: Colors.black,
-                            badgeColor: const Color(0xffE8EDFF),
-                            badgeTextColor: const Color(0xff0D47A1),
-                          )),
+                      // Ringkasan Tugas Title
+                      const Text(
+                        'Ringkasan Tugas',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff1A1C1E),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
 
-                      const SizedBox(height: 18),
+                      // Primary Stat: Total Pelanggan
+                      _buildPrimaryStat(),
 
-                      // CARD PENGADUAN MASUK
-                      Obx(() => _dashboardCard(
-                            title: 'PENGADUAN MASUK',
-                            value: controller.komplainBaru.value.toString(),
-                            icon: Icons.warning_amber_rounded,
-                            badge: controller.komplainBaru.value > 0
-                                ? 'Urgent'
-                                : 'Aman',
-                            backgroundColor:
-                                controller.komplainBaru.value > 0
-                                    ? const Color(0xffFDECEC)
-                                    : const Color(0xffECFDF5),
-                            valueColor: controller.komplainBaru.value > 0
-                                ? Colors.red
-                                : Colors.green,
-                            badgeColor: Colors.white,
-                            badgeTextColor: controller.komplainBaru.value > 0
-                                ? Colors.red
-                                : Colors.green,
-                          )),
+                      const SizedBox(height: 14),
 
-                      const SizedBox(height: 18),
-
-                      // CARD TAGIHAN BELUM LUNAS
-                      Obx(() => _dashboardCard(
-                            title: 'TAGIHAN BELUM LUNAS',
-                            value:
-                                controller.tagihanBelumLunas.value.toString(),
-                            icon: Icons.receipt_long_outlined,
-                            badge: 'Perlu Tindak',
-                            backgroundColor: const Color(0xffFFFBEB),
-                            valueColor: const Color(0xffB45309),
-                            badgeColor: Colors.white,
-                            badgeTextColor: const Color(0xffB45309),
-                          )),
+                      // Secondary Stats: Pengaduan & Tagihan Belum Lunas
+                      _buildSecondaryStats(),
                     ],
                   );
                 }),
 
-                const SizedBox(height: 38),
+                const SizedBox(height: 28),
 
-                // Judul peta
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        'Lokasi Saya Sekarang',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    // Tombol "Buka Maps"
-                    GestureDetector(
-                      onTap: () => _openInGoogleMaps(
-                        controller.currentLat.value,
-                        controller.currentLng.value,
-                      ),
-                      child: const Row(
-                        children: [
-                          Text(
-                            'Buka Maps',
-                            style: TextStyle(
-                              color: Color(0xff0D47A1),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 4),
-                          Icon(
-                            Icons.open_in_new,
-                            color: Color(0xff0D47A1),
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                // Menu Cepat Section
+                _buildQuickActions(),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 28),
 
-                // MAP reaktif GPS
-                Obx(() => _buildMap(
-                      lat: controller.currentLat.value,
-                      lng: controller.currentLng.value,
-                      isLocating: controller.isLocating.value,
-                      locationError: controller.locationError.value,
-                    )),
+                // Peta Section Card
+                _buildMapSection(),
 
-                const SizedBox(height: 100),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -228,14 +135,480 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
     );
   }
 
-  /// Buka Google Maps di koordinat tertentu
+  Widget _buildWelcomeBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xff0D47A1), Color(0xff1976D2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xff0D47A1).withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Text(
+                  'TirtaDesa Petugas',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const Icon(Icons.water_drop_rounded, color: Colors.white, size: 24),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Obx(() => Text(
+                'Halo, ${controller.userName.value}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+              )),
+          const SizedBox(height: 6),
+          const Text(
+            'Wilayah Kerja: Desa Pagerbarang',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrimaryStat() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xff0D47A1).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.groups_2_rounded, color: Color(0xff0D47A1), size: 30),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'TOTAL PELANGGAN',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Obx(() => Text(
+                      controller.totalPelanggan.value.toString(),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff1A1C1E),
+                      ),
+                    )),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xffE8EDFF),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Obx(() => Text(
+                  '${controller.totalMeter.value} Meteran',
+                  style: const TextStyle(
+                    color: Color(0xff0D47A1),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSecondaryStats() {
+    return Row(
+      children: [
+        // Card Pengaduan
+        Expanded(
+          child: Obx(() {
+            final count = controller.komplainBaru.value;
+            final isUrgent = count > 0;
+            return Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: isUrgent ? const Color(0xffFFF2F2) : const Color(0xffF0FDF4),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isUrgent ? Colors.red.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.15),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.01),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isUrgent ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isUrgent ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                          color: isUrgent ? Colors.red : Colors.green,
+                          size: 20,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          isUrgent ? 'Urgent' : 'Aman',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isUrgent ? Colors.red : Colors.green,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'PENGADUAN',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: isUrgent ? Colors.red : Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+        const SizedBox(width: 14),
+        // Card Tagihan Belum Lunas
+        Expanded(
+          child: Obx(() {
+            final count = controller.tagihanBelumLunas.value;
+            final hasUnpaid = count > 0;
+            return Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: hasUnpaid ? const Color(0xffFFFDF0) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: hasUnpaid ? const Color(0xffB45309).withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.04),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.01),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: hasUnpaid ? const Color(0xffB45309).withValues(alpha: 0.1) : Colors.grey.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.receipt_long_rounded,
+                          color: hasUnpaid ? const Color(0xffB45309) : Colors.grey.shade600,
+                          size: 20,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          hasUnpaid ? 'Tindak' : 'Lunas',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: hasUnpaid ? const Color(0xffB45309) : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'BELUM LUNAS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: hasUnpaid ? const Color(0xffB45309) : Colors.grey.shade800,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Menu Cepat',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xff1A1C1E),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _quickActionItem(
+              icon: Icons.speed_rounded,
+              label: 'Catat Meter',
+              color: const Color(0xff0D47A1),
+              onTap: () => Get.offAllNamed(Routes.PETUGAS_PELANGGAN),
+            ),
+            _quickActionItem(
+              icon: Icons.history_rounded,
+              label: 'Log Aktivitas',
+              color: const Color(0xff6A1B9A),
+              onTap: () => Get.toNamed(Routes.PETUGAS_ACTIVITY_LOG),
+            ),
+            _quickActionItem(
+              icon: Icons.person_rounded,
+              label: 'Profil Saya',
+              color: const Color(0xff007C89),
+              onTap: () => Get.offAllNamed(Routes.PETUGAS_PROFILE),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _quickActionItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff374151),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.location_on_rounded, color: Color(0xff0D47A1), size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Lokasi Saya Sekarang',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff1A1C1E),
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () => _openInGoogleMaps(
+                  controller.currentLat.value,
+                  controller.currentLng.value,
+                ),
+                child: const Row(
+                  children: [
+                    Text(
+                      'Buka Maps',
+                      style: TextStyle(
+                        color: Color(0xff0D47A1),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.open_in_new_rounded, color: Color(0xff0D47A1), size: 16),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Obx(() => _buildMap(
+                lat: controller.currentLat.value,
+                lng: controller.currentLng.value,
+                isLocating: controller.isLocating.value,
+                locationError: controller.locationError.value,
+              )),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openInGoogleMaps(double lat, double lng) async {
     final Uri googleMapsUri = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
     );
     final Uri geoUri = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
 
-    // Coba buka via geo: scheme (lebih akurat di Android)
     if (await canLaunchUrl(geoUri)) {
       await launchUrl(geoUri);
     } else if (await canLaunchUrl(googleMapsUri)) {
@@ -261,11 +634,10 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
 
     return Stack(
       children: [
-        // Peta utama – bisa diklik untuk buka Google Maps
         GestureDetector(
           onTap: () => _openInGoogleMaps(lat, lng),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             child: SizedBox(
               height: 260,
               child: FlutterMap(
@@ -278,12 +650,10 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.tirta_desa',
                     maxZoom: 19,
                   ),
-                  // Marker lokasi petugas (GPS)
                   MarkerLayer(
                     markers: [
                       Marker(
@@ -293,7 +663,6 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            // Lingkaran biru transparan
                             Container(
                               width: 40,
                               height: 40,
@@ -317,8 +686,6 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
             ),
           ),
         ),
-
-        // Overlay: loading GPS
         if (isLocating)
           Positioned(
             top: 12,
@@ -355,8 +722,6 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
               ),
             ),
           ),
-
-        // Overlay: error GPS
         if (!isLocating && locationError.isNotEmpty)
           Positioned(
             top: 12,
@@ -375,8 +740,7 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                   Flexible(
                     child: Text(
                       locationError,
-                      style:
-                          const TextStyle(fontSize: 11, color: Colors.red),
+                      style: const TextStyle(fontSize: 11, color: Colors.red),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -384,8 +748,6 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
               ),
             ),
           ),
-
-        // Tombol refresh lokasi (pojok kanan atas peta)
         Positioned(
           top: 12,
           right: 12,
@@ -420,16 +782,13 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
             ),
           ),
         ),
-
-        // Badge "Ketuk untuk buka Maps"
         Positioned(
           bottom: 12,
           left: 0,
           right: 0,
           child: Center(
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.55),
                 borderRadius: BorderRadius.circular(20),
@@ -466,8 +825,7 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
           const SizedBox(height: 8),
           const Text(
             'Gagal memuat data',
-            style: TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16),
           ),
           const SizedBox(height: 4),
           const Text(
@@ -480,95 +838,11 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             icon: const Icon(Icons.refresh),
             label: const Text('Coba Lagi'),
             onPressed: () => controller.fetchDashboardData(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dashboardCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required String badge,
-    required Color backgroundColor,
-    required Color valueColor,
-    required Color badgeColor,
-    required Color badgeTextColor,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: const Color(0xff0D47A1)),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: badgeColor,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(
-                  badge,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: badgeTextColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 30),
-
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 15,
-              letterSpacing: 0.5,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: valueColor,
-            ),
           ),
         ],
       ),

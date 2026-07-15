@@ -9,18 +9,71 @@ import '../../reports/controllers/reports_controller.dart';
 class NewReportController extends GetxController {
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
+  final addressController = TextEditingController();
   final selectedCategory = "".obs;
   final isLoading = false.obs;
   final box = GetStorage();
 
+  @override
+  void onInit() {
+    super.onInit();
+    loadUserAddress();
+  }
+
   void selectCategory(String cat) => selectedCategory.value = cat;
+
+  Future<void> loadUserAddress() async {
+    final token = box.read("token");
+    final userId = box.read("id");
+    if (token == null || userId == null) return;
+
+    // Coba baca dari storage jika ada
+    final savedAddress = box.read("pelanggan_alamat");
+    if (savedAddress != null) {
+      addressController.text = savedAddress;
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse("${Api.baseUrl}/pelanggan"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+      if (response.statusCode == 200) {
+        final List list = jsonDecode(response.body);
+        for (final item in list) {
+          if (item["user_id"] == userId) {
+            final address = item["alamat"] ?? "";
+            addressController.text = address;
+            box.write("pelanggan_alamat", address);
+            box.write("pelanggan_id", item["id"]);
+            break;
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (addressController.text.isEmpty) {
+      // Fallback placeholder
+      addressController.text = "Jl. Tirta Raya No. 42, RT 03/RW 01";
+    }
+  }
 
   Future<void> submit() async {
     final category = selectedCategory.value;
     final description = descriptionController.text.trim();
+    final address = addressController.text.trim();
 
     if (category.isEmpty) {
       Get.snackbar("Gagal", "Pilih kategori masalah terlebih dahulu",
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (address.isEmpty) {
+      Get.snackbar("Gagal", "Alamat kejadian tidak boleh kosong",
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
@@ -75,7 +128,7 @@ class NewReportController extends GetxController {
         body: jsonEncode({
           "pelanggan_id": pelangganId,
           "judul": category,
-          "deskripsi": description,
+          "deskripsi": "Alamat Kejadian: $address\n\nDetail Masalah:\n$description",
         }),
       );
 
@@ -106,6 +159,7 @@ class NewReportController extends GetxController {
   void onClose() {
     titleController.dispose();
     descriptionController.dispose();
+    addressController.dispose();
     super.onClose();
   }
 }

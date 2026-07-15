@@ -67,7 +67,7 @@ class SplashView extends StatelessWidget {
               child: Column(
                 children: [
                   const Text(
-                    "Versi 1.0.4",
+                    "Versi 1.0.0",
                     style: TextStyle(color: AppColors.outline, fontSize: 12),
                   ),
                 ],

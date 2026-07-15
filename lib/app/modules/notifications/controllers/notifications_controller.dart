@@ -13,6 +13,7 @@ import 'package:tirta_desa/core/values/api.dart';
 enum NotifType { tagihan, komplain, meter, info }
 
 class AppNotification {
+  final String id;
   final String title;
   final String body;
   final DateTime time;
@@ -20,6 +21,7 @@ class AppNotification {
   bool isRead;
 
   AppNotification({
+    required this.id,
     required this.title,
     required this.body,
     required this.time,
@@ -56,6 +58,7 @@ class NotificationsController extends GetxController {
 
   Future<void> loadNotifications() async {
     final token = _box.read('token');
+    final userId = _box.read('id') ?? 0;
     if (token == null) {
       hasError.value = true;
       errorMessage.value = 'Silakan login terlebih dahulu';
@@ -65,6 +68,9 @@ class NotificationsController extends GetxController {
     isLoading.value = true;
     hasError.value = false;
     final collected = <AppNotification>[];
+
+    // Ambil daftar ID notifikasi yang sudah dibaca
+    final readIds = Set<String>.from(_box.read('read_notif_ids_$userId') ?? []);
 
     try {
       // Step 1: Ambil dashboard → pelanggan_id
@@ -116,17 +122,23 @@ class NotificationsController extends GetxController {
               final bulan = t['bulan']?.toString() ?? '-';
 
               if (status == 'belum_lunas') {
+                final notifId = "tagihan_${t['id']}_belum_lunas";
+                final isAlreadyRead = readIds.contains(notifId);
                 collected.add(AppNotification(
+                  id: notifId,
                   title: '⚠️ Tagihan Belum Lunas',
                   body:
                       'Tagihan bulan ${_formatBulan(bulan)} sebesar ${_formatRupiah(total)} belum dibayar. Segera lakukan pembayaran.',
-                  time: DateTime.now().subtract(const Duration(hours: 1)),
+                  time: _parseBulanToDateTime(bulan) ?? DateTime.now().subtract(const Duration(hours: 1)),
                   type: NotifType.tagihan,
-                  isRead: false,
+                  isRead: isAlreadyRead,
                 ));
               } else if (status == 'lunas') {
                 final tanggal = t['tanggal_bayar']?.toString();
+                final notifId = "tagihan_${t['id']}_lunas";
+                final isAlreadyRead = readIds.contains(notifId);
                 collected.add(AppNotification(
+                  id: notifId,
                   title: '✅ Pembayaran Dikonfirmasi',
                   body:
                       'Tagihan bulan ${_formatBulan(bulan)} sebesar ${_formatRupiah(total)} telah lunas${tanggal != null ? ' pada ${_formatTanggal(tanggal)}' : ''}.',
@@ -134,7 +146,7 @@ class NotificationsController extends GetxController {
                       ? _parseDate(tanggal)
                       : DateTime.now().subtract(const Duration(days: 1)),
                   type: NotifType.tagihan,
-                  isRead: true,
+                  isRead: isAlreadyRead || true, // Default dibaca
                 ));
               }
             }
@@ -155,14 +167,24 @@ class NotificationsController extends GetxController {
               final bulan = c['bulan']?.toString() ?? '-';
               final penggunaan = (c['penggunaan_m3'] ?? 0).toDouble();
               final petugas = c['petugas_nama']?.toString() ?? 'Petugas';
+              final notifId = "meter_${c['id']}";
+              final isAlreadyRead = readIds.contains(notifId);
+
+              DateTime? tgl;
+              if (c['created_at'] != null) {
+                try {
+                  tgl = DateTime.parse(c['created_at'].toString()).toLocal();
+                } catch (_) {}
+              }
 
               collected.add(AppNotification(
+                id: notifId,
                 title: '📊 Meteran Dicatat',
                 body:
                     'Meteran bulan ${_formatBulan(bulan)} telah dicatat oleh $petugas. Penggunaan: ${penggunaan.toStringAsFixed(1)} m³.',
-                time: DateTime.now().subtract(const Duration(days: 2)),
+                time: tgl ?? DateTime.now().subtract(const Duration(days: 2)),
                 type: NotifType.meter,
-                isRead: true,
+                isRead: isAlreadyRead || true, // Default dibaca
               ));
             }
           }
@@ -183,24 +205,35 @@ class NotificationsController extends GetxController {
           for (final k in myKomplain) {
             final judul = k['judul']?.toString() ?? 'Laporan';
             final status = (k['status'] ?? 'pending').toString();
+            final notifId = "komplain_${k['id']}_$status";
+            final isAlreadyRead = readIds.contains(notifId);
+
+            DateTime? tgl;
+            if (k['created_at'] != null) {
+              try {
+                tgl = DateTime.parse(k['created_at'].toString()).toLocal();
+              } catch (_) {}
+            }
 
             if (status == 'resolved') {
               collected.add(AppNotification(
+                id: notifId,
                 title: '✅ Laporan Selesai',
                 body:
                     'Laporan "$judul" telah ditangani oleh tim kami. Terima kasih telah melapor.',
-                time: DateTime.now().subtract(const Duration(days: 1)),
+                time: tgl ?? DateTime.now().subtract(const Duration(days: 1)),
                 type: NotifType.komplain,
-                isRead: false,
+                isRead: isAlreadyRead,
               ));
             } else if (status == 'pending') {
               collected.add(AppNotification(
+                id: notifId,
                 title: '🕐 Laporan Dalam Proses',
                 body:
                     'Laporan "$judul" sedang diproses oleh tim kami. Mohon tunggu.',
-                time: DateTime.now().subtract(const Duration(days: 3)),
+                time: tgl ?? DateTime.now().subtract(const Duration(days: 3)),
                 type: NotifType.komplain,
-                isRead: true,
+                isRead: isAlreadyRead || true, // Default dibaca
               ));
             }
           }
@@ -225,16 +258,32 @@ class NotificationsController extends GetxController {
 
   /// Tandai semua sebagai sudah dibaca
   void markAllRead() {
+    final userId = _box.read('id') ?? 0;
+    final readIds = List<String>.from(_box.read('read_notif_ids_$userId') ?? []);
     for (final n in notifications) {
-      n.isRead = true;
+      if (!n.isRead) {
+        n.isRead = true;
+        if (!readIds.contains(n.id)) {
+          readIds.add(n.id);
+        }
+      }
     }
+    _box.write('read_notif_ids_$userId', readIds);
     notifications.refresh();
   }
 
   /// Tandai satu notifikasi sebagai sudah dibaca
   void markRead(AppNotification notif) {
-    notif.isRead = true;
-    notifications.refresh();
+    if (!notif.isRead) {
+      notif.isRead = true;
+      final userId = _box.read('id') ?? 0;
+      final readIds = List<String>.from(_box.read('read_notif_ids_$userId') ?? []);
+      if (!readIds.contains(notif.id)) {
+        readIds.add(notif.id);
+        _box.write('read_notif_ids_$userId', readIds);
+      }
+      notifications.refresh();
+    }
   }
 
   // ─── Helpers ─────────────────────────────
@@ -272,5 +321,14 @@ class NotificationsController extends GetxController {
     } catch (_) {
       return DateTime.now();
     }
+  }
+
+  DateTime? _parseBulanToDateTime(String bulan) {
+    try {
+      if (RegExp(r'^\d{4}-\d{2}').hasMatch(bulan)) {
+        return DateFormat('yyyy-MM').parse(bulan);
+      }
+    } catch (_) {}
+    return null;
   }
 }

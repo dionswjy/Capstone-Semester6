@@ -27,7 +27,7 @@ class NewReportView extends GetView<NewReportController> {
             const SizedBox(height: 24),
             const Text("Lokasi Kejadian", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 16),
-            _buildLocationPlaceholder(),
+            _buildLocationInput(),
             const SizedBox(height: 24),
             const Text("Deskripsi Masalah", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 16),
@@ -117,30 +117,34 @@ class NewReportView extends GetView<NewReportController> {
     );
   }
 
-  Widget _buildLocationPlaceholder() {
+  Widget _buildLocationInput() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.outline.withOpacity(0.1)),
       ),
-      child: const Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(LucideIcons.mapPin, color: AppColors.primaryContainer, size: 20),
-          SizedBox(width: 12),
+          const Padding(
+            padding: EdgeInsets.only(top: 12, right: 12),
+            child: Icon(LucideIcons.mapPin, color: AppColors.primaryContainer, size: 20),
+          ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Alamat Kejadian", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.onSurfaceVariant)),
-                SizedBox(height: 4),
-                Text(
-                  "Jl. Tirta Raya No. 42, RT 03/RW 01",
-                  style: TextStyle(fontSize: 14, color: AppColors.onSurface),
-                ),
-              ],
+            child: TextField(
+              controller: controller.addressController,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              decoration: const InputDecoration(
+                labelText: "Alamat Kejadian",
+                labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.onSurfaceVariant),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
+              ),
+              style: const TextStyle(fontSize: 14, color: AppColors.onSurface),
             ),
           ),
         ],

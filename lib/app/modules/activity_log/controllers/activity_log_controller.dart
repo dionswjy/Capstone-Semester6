@@ -87,15 +87,47 @@ class ActivityLogController extends GetxController {
       }
 
       final pelangganId = dashboard['pelanggan_id'];
+      final userId = _box.read('id') ?? 0;
 
-      // 2. Tambah log "sesi aktif" (login hari ini dari storage)
-      collected.add(ActivityLog(
-        title: 'Login Berhasil',
-        description:
-            'Masuk sebagai ${dashboard['nama'] ?? _box.read('name') ?? 'Pengguna'}',
-        time: DateTime.now().subtract(const Duration(minutes: 1)),
-        type: ActivityLogType.login,
-      ));
+      // 2. Tambah log Login dari lokal
+      final loginTimestamps = _box.read<List<dynamic>>("login_logs_$userId") ?? [];
+      if (loginTimestamps.isEmpty) {
+        // Fallback jika log lokal kosong
+        collected.add(ActivityLog(
+          title: 'Login Berhasil',
+          description:
+              'Masuk sebagai ${dashboard['nama'] ?? _box.read('name') ?? 'Pengguna'}',
+          time: DateTime.now().subtract(const Duration(minutes: 1)),
+          type: ActivityLogType.login,
+        ));
+      } else {
+        for (var ts in loginTimestamps) {
+          try {
+            final dt = DateTime.parse(ts.toString());
+            collected.add(ActivityLog(
+              title: 'Login Berhasil',
+              description:
+                  'Masuk sebagai ${dashboard['nama'] ?? _box.read('name') ?? 'Pengguna'}',
+              time: dt,
+              type: ActivityLogType.login,
+            ));
+          } catch (_) {}
+        }
+      }
+
+      // 3. Tambah log Profil dari lokal
+      final profileTimestamps = _box.read<List<dynamic>>("profile_logs_$userId") ?? [];
+      for (var ts in profileTimestamps) {
+        try {
+          final dt = DateTime.parse(ts.toString());
+          collected.add(ActivityLog(
+            title: 'Profil Diperbarui',
+            description: 'Data profil berhasil diubah.',
+            time: dt,
+            type: ActivityLogType.profile,
+          ));
+        } catch (_) {}
+      }
 
       if (pelangganId != null) {
         // 3. Cari meter_id
