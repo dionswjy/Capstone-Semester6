@@ -107,11 +107,6 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
 
                       // Primary Stat: Total Pelanggan
                       _buildPrimaryStat(),
-
-                      const SizedBox(height: 14),
-
-                      // Secondary Stats: Pengaduan & Tagihan Belum Lunas
-                      _buildSecondaryStats(),
                     ],
                   );
                 }),
@@ -267,92 +262,6 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
         ],
       ),
     );
-  }
-
-  Widget _buildSecondaryStats() {
-    return Obx(() {
-      final count = controller.komplainBaru.value;
-      final isUrgent = count > 0;
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isUrgent ? const Color(0xffFFF2F2) : const Color(0xffF0FDF4),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isUrgent ? Colors.red.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.15),
-                ),
-              ),
-              child: Icon(
-                isUrgent ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
-                color: isUrgent ? Colors.red : Colors.green,
-                size: 30,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'PENGADUAN PELANGGAN',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isUrgent ? '$count Pengaduan Baru' : 'Tidak Ada Pengaduan',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: isUrgent ? Colors.red : Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: isUrgent ? const Color(0xffFFF2F2) : const Color(0xffF0FDF4),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: isUrgent ? Colors.red.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Text(
-                isUrgent ? 'Urgent' : 'Aman',
-                style: TextStyle(
-                  color: isUrgent ? Colors.red : Colors.green,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
   }
 
 
