@@ -116,12 +116,7 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                   );
                 }),
 
-                const SizedBox(height: 28),
-
-                // Menu Cepat Section
-                _buildQuickActions(),
-
-                const SizedBox(height: 28),
+                  const SizedBox(height: 28),
 
                 // Peta Section Card
                 _buildMapSection(),
@@ -442,96 +437,7 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
     );
   }
 
-  Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Menu Cepat',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xff1A1C1E),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _quickActionItem(
-              icon: Icons.speed_rounded,
-              label: 'Catat Meter',
-              color: const Color(0xff0D47A1),
-              onTap: () => Get.offAllNamed(Routes.PETUGAS_PELANGGAN),
-            ),
-            _quickActionItem(
-              icon: Icons.history_rounded,
-              label: 'Log Aktivitas',
-              color: const Color(0xff6A1B9A),
-              onTap: () => Get.toNamed(Routes.PETUGAS_ACTIVITY_LOG),
-            ),
-            _quickActionItem(
-              icon: Icons.person_rounded,
-              label: 'Profil Saya',
-              color: const Color(0xff007C89),
-              onTap: () => Get.offAllNamed(Routes.PETUGAS_PROFILE),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
-  Widget _quickActionItem({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xff374151),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildMapSection() {
     return Container(
@@ -553,22 +459,21 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.location_on_rounded, color: Color(0xff0D47A1), size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Lokasi Saya Sekarang',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xff1A1C1E),
-                    ),
+              const Icon(Icons.location_on_rounded, color: Color(0xff0D47A1), size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Lokasi Saya Sekarang',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xff1A1C1E),
                   ),
-                ],
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: () => _openInGoogleMaps(
                   controller.currentLat.value,
