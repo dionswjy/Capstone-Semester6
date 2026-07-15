@@ -37,29 +37,16 @@ class ProfileView extends GetView<ProfileController> {
   Widget _buildProfileHeader() {
     return Column(
       children: [
-        Stack(
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
-                color: AppColors.primaryFixed,
-              ),
-              child: const Icon(LucideIcons.user, size: 48, color: AppColors.primaryContainer),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: AppColors.primaryContainer, shape: BoxShape.circle),
-                child: const Icon(LucideIcons.pencil, color: Colors.white, size: 14),
-              ),
-            ),
-          ],
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 4),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+            color: AppColors.primaryFixed,
+          ),
+          child: const Icon(LucideIcons.user, size: 48, color: AppColors.primaryContainer),
         ),
         const SizedBox(height: 16),
         Obx(() => Text(controller.userName.value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20))),

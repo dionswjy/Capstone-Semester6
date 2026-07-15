@@ -119,39 +119,28 @@ class NewReportView extends GetView<NewReportController> {
 
   Widget _buildLocationPlaceholder() {
     return Container(
-      height: 180,
       width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.outline.withOpacity(0.1)),
-        image: const DecorationImage(
-          image: NetworkImage("https://lh3.googleusercontent.com/aida-public/AB6AXuBh5_pmAQYowewFuieUkCdjiY2yKik9wEc9-7YhBOglRKDsqcVZ-BmICfR28pb_9rf22j49I_gFJHwCS5kJ3TWj5TnuqEivBHwyg0WBGC7KhJtPd9O7hTcIK_tStmvaH4AUFy4ngW-lH62Q_pVRub_WB5K81aCqIbhK1yXAwDUCvW61_8bru8jtqhdKpX-vvlRqClZlh-GEIXBxVqPZeNkKTlTNswIZMG7Nw3d1-e0yl6idohRXfjlc6ahWYKu5RMujqSpL3NX8jn4"),
-          fit: BoxFit.cover,
-          opacity: 0.5,
-        ),
       ),
-      child: Stack(
-        alignment: Alignment.center,
+      child: const Row(
         children: [
-          const Icon(LucideIcons.mapPin, color: Colors.red, size: 40),
-          Positioned(
-            bottom: 12,
-            left: 12,
-            right: 12,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(10)),
-              child: const Row(
-                children: [
-                  Icon(LucideIcons.navigation, color: AppColors.primaryContainer, size: 16),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text("Jl. Tirta Raya No. 42, RT 03/RW 01",
-                        style: TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ),
+          Icon(LucideIcons.mapPin, color: AppColors.primaryContainer, size: 20),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Alamat Kejadian", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.onSurfaceVariant)),
+                SizedBox(height: 4),
+                Text(
+                  "Jl. Tirta Raya No. 42, RT 03/RW 01",
+                  style: TextStyle(fontSize: 14, color: AppColors.onSurface),
+                ),
+              ],
             ),
           ),
         ],

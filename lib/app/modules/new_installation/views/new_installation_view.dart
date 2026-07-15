@@ -138,45 +138,15 @@ class NewInstallationView extends GetView<NewInstallationController> {
   }
 
   Widget _buildAddressForm() {
-    return Column(
-      children: [
-        Container(
-          height: 150,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            image: const DecorationImage(
-              image: NetworkImage("https://lh3.googleusercontent.com/aida-public/AB6AXuBKUZ_Dfry5cbipkiiP-CAuUQpydw_q4ChSuY46Rk0vQ98_9oqb43e1b49TOsirVDb227TuHJDCEkPBwPgk9vYxXLkc0XM6LB2ezXJu8bYXjEQXV-vs4K6N3i7xROorBd2sYke1C4Q4-ynDaf87vYV5b-YQrbs2188n6xnlPvORot5iMheZrKuMcsQ81g4rU0jv1-aKo6Ozsl6SdE-0x5_nJO4C_uQ4q0tQawp3lcbR15HgOf51I0Nno-D80UnOj6bOsH3HBngd8bI"),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(LucideIcons.locate, size: 14, color: AppColors.primaryContainer),
-                  SizedBox(width: 4),
-                  Text("Gunakan Lokasi Saat Ini", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: controller.addressController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: "Masukkan alamat lengkap...",
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-          ),
-        ),
-      ],
+    return TextField(
+      controller: controller.addressController,
+      maxLines: 3,
+      decoration: InputDecoration(
+        hintText: "Masukkan alamat lengkap...",
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      ),
     );
   }
 

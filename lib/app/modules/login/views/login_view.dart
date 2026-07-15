@@ -47,8 +47,6 @@ class LoginView extends GetView<LoginController> {
               ),
               const SizedBox(height: 40),
               _buildLoginForm(),
-              const SizedBox(height: 24),
-              _buildSocialLogin(),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -156,37 +154,4 @@ class LoginView extends GetView<LoginController> {
     );
   }
 
-  Widget _buildSocialLogin() {
-    return Column(
-      children: [
-        const Row(
-          children: [
-            Expanded(child: Divider()),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text("Atau masuk dengan", style: TextStyle(fontSize: 12, color: AppColors.outline)),
-            ),
-            Expanded(child: Divider()),
-          ],
-        ),
-        const SizedBox(height: 16),
-        OutlinedButton(
-          onPressed: () {},
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 54),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            side: BorderSide(color: AppColors.outline.withOpacity(0.2)),
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(LucideIcons.chrome, size: 20),
-              SizedBox(width: 12),
-              Text("Masuk dengan Google", style: TextStyle(color: AppColors.onSurface)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }
