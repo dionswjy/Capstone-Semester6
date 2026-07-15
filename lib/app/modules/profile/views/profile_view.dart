@@ -214,27 +214,8 @@ class ProfileView extends GetView<ProfileController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("INFORMASI METERAN", style: TextStyle(color: AppColors.primaryContainer, fontSize: 10, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.secondaryContainer.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-                child: const Icon(LucideIcons.gauge, size: 18, color: AppColors.onSecondaryContainer),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("No. Meter Utama", style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 10)),
-                  Text("TD-MET-88291", style: TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(),
+          const Text("RIWAYAT & AKTIVITAS", style: TextStyle(color: AppColors.primaryContainer, fontSize: 10, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(LucideIcons.history, color: AppColors.onSurfaceVariant),

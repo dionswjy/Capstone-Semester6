@@ -201,36 +201,47 @@ class PetugasInputMeterController extends GetxController {
 
     isSaving.value = true;
 
-    final berhasil = await _service.simpanCatatMeter(
-      token: token,
-      meterId: selectedMeter.value!.id,
-      bulan: bulanAktif,
-      petugasNama: petugasNama.value,
-      angkaMeterLalu: angkaMeterLalu.value,
-      angkaMeterKini: kini,
-      penggunaanM3: penggunaan.value,
-    );
-
-    isSaving.value = false;
-
-    if (berhasil) {
-      Get.snackbar(
-        'Berhasil',
-        'Data meteran berhasil disimpan',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: const Color(0xff007BFF),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
+    try {
+      final berhasil = await _service.simpanCatatMeter(
+        token: token,
+        meterId: selectedMeter.value!.id,
+        bulan: bulanAktif,
+        petugasNama: petugasNama.value,
+        angkaMeterLalu: angkaMeterLalu.value,
+        angkaMeterKini: kini,
+        penggunaanM3: penggunaan.value,
       );
-      Get.back();
-    } else {
+
+      if (berhasil) {
+        Get.snackbar(
+          'Berhasil',
+          'Data meteran berhasil disimpan',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color(0xff007BFF),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        Get.back();
+      } else {
+        Get.snackbar(
+          'Gagal',
+          'Terjadi kesalahan saat menyimpan data',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      debugPrint('simpanMeter error: $e');
       Get.snackbar(
         'Gagal',
-        'Terjadi kesalahan saat menyimpan data',
+        'Terjadi kesalahan jaringan atau server: $e',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    } finally {
+      isSaving.value = false;
     }
   }
 

@@ -355,39 +355,46 @@ class PetugasInputMeterView extends GetView<PetugasInputMeterController> {
                 const SizedBox(height: 28),
 
                 // ── Tombol Simpan ─────────────────────
-                Obx(() => SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: controller.isSaving.value
-                            ? null
-                            : controller.simpanMeter,
-                        icon: controller.isSaving.value
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2),
-                              )
-                            : const Icon(Icons.save, color: Colors.white),
-                        label: Text(
-                          controller.isSaving.value
-                              ? 'Menyimpan...'
-                              : 'Simpan Data Meteran',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff007BFF),
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                Obx(() {
+                  final isSaving = controller.isSaving.value;
+                  final hasNoMeter = controller.selectedMeter.value == null;
+
+                  return SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: (isSaving || hasNoMeter)
+                          ? null
+                          : controller.simpanMeter,
+                      icon: isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save, color: Colors.white),
+                      label: Text(
+                        hasNoMeter
+                            ? 'Meteran Belum Terdaftar'
+                            : (isSaving ? 'Menyimpan...' : 'Simpan Data Meteran'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff007BFF),
+                        disabledBackgroundColor: hasNoMeter
+                            ? Colors.grey.shade400
+                            : const Color(0xff007BFF).withOpacity(0.6),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
 
                 const SizedBox(height: 16),
 

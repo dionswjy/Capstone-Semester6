@@ -270,67 +270,48 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
   }
 
   Widget _buildSecondaryStats() {
-    return Row(
-      children: [
-        // Card Pengaduan
-        Expanded(
-          child: Obx(() {
-            final count = controller.komplainBaru.value;
-            final isUrgent = count > 0;
-            return Container(
-              padding: const EdgeInsets.all(18),
+    return Obx(() {
+      final count = controller.komplainBaru.value;
+      final isUrgent = count > 0;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isUrgent ? const Color(0xffFFF2F2) : const Color(0xffF0FDF4),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isUrgent ? Colors.red.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.15),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.01),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
+              child: Icon(
+                isUrgent ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                color: isUrgent ? Colors.red : Colors.green,
+                size: 30,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isUrgent ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isUrgent ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
-                          color: isUrgent ? Colors.red : Colors.green,
-                          size: 20,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          isUrgent ? 'Urgent' : 'Aman',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: isUrgent ? Colors.red : Colors.green,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
                   const Text(
-                    'PENGADUAN',
+                    'PENGADUAN PELANGGAN',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -340,101 +321,38 @@ class PetugasDashboardView extends GetView<PetugasDashboardController> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    count.toString(),
+                    isUrgent ? '$count Pengaduan Baru' : 'Tidak Ada Pengaduan',
                     style: TextStyle(
-                      fontSize: 26,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: isUrgent ? Colors.red : Colors.green,
                     ),
                   ),
                 ],
               ),
-            );
-          }),
-        ),
-        const SizedBox(width: 14),
-        // Card Tagihan Belum Lunas
-        Expanded(
-          child: Obx(() {
-            final count = controller.tagihanBelumLunas.value;
-            final hasUnpaid = count > 0;
-            return Container(
-              padding: const EdgeInsets.all(18),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: hasUnpaid ? const Color(0xffFFFDF0) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                color: isUrgent ? const Color(0xffFFF2F2) : const Color(0xffF0FDF4),
+                borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: hasUnpaid ? const Color(0xffB45309).withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.04),
+                  color: isUrgent ? Colors.red.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.01),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: hasUnpaid ? const Color(0xffB45309).withValues(alpha: 0.1) : Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.receipt_long_rounded,
-                          color: hasUnpaid ? const Color(0xffB45309) : Colors.grey.shade600,
-                          size: 20,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          hasUnpaid ? 'Tindak' : 'Lunas',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: hasUnpaid ? const Color(0xffB45309) : Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'BELUM LUNAS',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    count.toString(),
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: hasUnpaid ? const Color(0xffB45309) : Colors.grey.shade800,
-                    ),
-                  ),
-                ],
+              child: Text(
+                isUrgent ? 'Urgent' : 'Aman',
+                style: TextStyle(
+                  color: isUrgent ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
-            );
-          }),
+            ),
+          ],
         ),
-      ],
-    );
+      );
+    });
   }
 
 

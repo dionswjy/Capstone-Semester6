@@ -110,48 +110,46 @@ class NotificationsView extends GetView<NotificationsController> {
   // ── Summary unread count ────────────────────
 
   Widget _buildSummaryHeader() {
-    return Obx(() {
-      final unread = controller.unreadCount;
-      if (unread == 0) return const SizedBox(height: 4);
-      return Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.primaryContainer.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppColors.primaryContainer.withValues(alpha: 0.2),
+    final unread = controller.unreadCount;
+    if (unread == 0) return const SizedBox(height: 4);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primaryContainer.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.primaryContainer.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(LucideIcons.bellRing,
+              color: AppColors.primaryContainer, size: 18),
+          const SizedBox(width: 10),
+          Text(
+            '$unread notifikasi belum dibaca',
+            style: const TextStyle(
+              color: AppColors.primaryContainer,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            const Icon(LucideIcons.bellRing,
-                color: AppColors.primaryContainer, size: 18),
-            const SizedBox(width: 10),
-            Text(
-              '$unread notifikasi belum dibaca',
-              style: const TextStyle(
+          const Spacer(),
+          GestureDetector(
+            onTap: controller.markAllRead,
+            child: const Text(
+              'Tandai semua',
+              style: TextStyle(
                 color: AppColors.primaryContainer,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontSize: 12,
+                decoration: TextDecoration.underline,
               ),
             ),
-            const Spacer(),
-            GestureDetector(
-              onTap: controller.markAllRead,
-              child: const Text(
-                'Tandai semua',
-                style: TextStyle(
-                  color: AppColors.primaryContainer,
-                  fontSize: 12,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
+          ),
+        ],
+      ),
+    );
   }
 
   // ── Date section header ─────────────────────
@@ -188,102 +186,99 @@ class NotificationsView extends GetView<NotificationsController> {
     final color = _colorFor(notif.type);
     final icon = _iconFor(notif.type);
     final timeStr = _timeLabel(notif.time);
+    final isRead = notif.isRead;
 
     return GestureDetector(
       onTap: () => controller.markRead(notif),
-      child: Obx(() {
-        // Trigger rebuild saat isRead berubah
-        final isRead = notif.isRead;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isRead
+              ? Colors.white
+              : AppColors.primaryContainer.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
             color: isRead
-                ? Colors.white
-                : AppColors.primaryContainer.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isRead
-                  ? AppColors.outline.withValues(alpha: 0.1)
-                  : AppColors.primaryContainer.withValues(alpha: 0.2),
-              width: isRead ? 1 : 1.5,
-            ),
+                ? AppColors.outline.withValues(alpha: 0.1)
+                : AppColors.primaryContainer.withValues(alpha: 0.2),
+            width: isRead ? 1 : 1.5,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notif.title,
+                          style: TextStyle(
+                            fontWeight: isRead
+                                ? FontWeight.w500
+                                : FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        timeStr,
+                        style: const TextStyle(
+                          color: AppColors.outline,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    notif.body,
+                    style: TextStyle(
+                      color: isRead
+                          ? AppColors.onSurfaceVariant
+                          : AppColors.onSurface,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Unread dot
+            if (!isRead) ...[
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(top: 4),
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryContainer,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 20),
               ),
-              const SizedBox(width: 14),
-
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notif.title,
-                            style: TextStyle(
-                              fontWeight: isRead
-                                  ? FontWeight.w500
-                                  : FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          timeStr,
-                          style: const TextStyle(
-                            color: AppColors.outline,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      notif.body,
-                      style: TextStyle(
-                        color: isRead
-                            ? AppColors.onSurfaceVariant
-                            : AppColors.onSurface,
-                        fontSize: 13,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Unread dot
-              if (!isRead) ...[
-                const SizedBox(width: 8),
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(top: 4),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
             ],
-          ),
-        );
-      }),
+          ],
+        ),
+      ),
     );
   }
 
@@ -339,11 +334,11 @@ class NotificationsView extends GetView<NotificationsController> {
           children: [
             const Icon(LucideIcons.wifiOff, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Obx(() => Text(
-                  controller.errorMessage.value,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
-                )),
+            Text(
+              controller.errorMessage.value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: controller.loadNotifications,
