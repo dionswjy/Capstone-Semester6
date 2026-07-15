@@ -323,18 +323,26 @@ class PetugasInputMeterView extends GetView<PetugasInputMeterController> {
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Pemakaian Bulan Ini:',
-                                  style: TextStyle(fontSize: 16),
+                                const Expanded(
+                                  child: Text(
+                                    'Pemakaian Bulan Ini:',
+                                    style: TextStyle(fontSize: 16),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                Text(
-                                  controller.penggunaan.value > 0
-                                      ? '${controller.penggunaan.value.toStringAsFixed(2)} m³'
-                                      : '-- m³',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xff007BFF),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    controller.penggunaan.value > 0
+                                        ? '${controller.penggunaan.value.toStringAsFixed(2)} m³'
+                                        : '-- m³',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xff007BFF),
+                                    ),
+                                    textAlign: TextAlign.end,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],

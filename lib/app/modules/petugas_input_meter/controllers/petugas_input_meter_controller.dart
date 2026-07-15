@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:tirta_desa/app/data/models/meter_model.dart';
 import 'package:tirta_desa/app/data/services/meter_service.dart';
+import '../views/meter_crop_view.dart';
 
 class PetugasInputMeterController extends GetxController {
   final _box = GetStorage();
@@ -254,9 +255,16 @@ class PetugasInputMeterController extends GetxController {
     isScanning.value = true;
 
     try {
+      // Buka halaman pangkas terlebih dahulu
+      final String? croppedPath = await Get.to<String>(() => MeterCropView(imagePath: picked.path));
+      if (croppedPath == null) {
+        isScanning.value = false;
+        return;
+      }
+
       final result = await _service.scanMeter(
         token: token,
-        imageFile: File(picked.path),
+        imageFile: File(croppedPath),
       );
 
       if (result != null && result.isNotEmpty) {
